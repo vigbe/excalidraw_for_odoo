@@ -1,0 +1,120 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* excalidraw_for_odoo
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo 19.0\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: excalidraw_for_odoo
+msgid "Excalidraw"
+msgstr "Excalidraw"
+
+#. module: excalidraw_for_odoo
+msgid "Elements"
+msgstr "Elementos"
+
+#. module: excalidraw_for_odoo
+msgid "Name"
+msgstr "Nombre"
+
+#. module: excalidraw_for_odoo
+msgid "Preview"
+msgstr "Vista previa"
+
+#. module: excalidraw_for_odoo
+msgid "Scene"
+msgstr "Escena"
+
+#. module: excalidraw_for_odoo
+msgid "Scene (JSON)"
+msgstr "Escena (JSON)"
+
+#. module: excalidraw_for_odoo
+msgid "Excalidraw scene JSON document (elements + editor state)."
+msgstr "Documento JSON de escena de Excalidraw (elementos + estado del editor)."
+
+#. module: excalidraw_for_odoo
+msgid "Active"
+msgstr "Activo"
+
+#. module: excalidraw_for_odoo
+msgid "Linked Document Model"
+msgstr "Modelo del documento vinculado"
+
+#. module: excalidraw_for_odoo
+msgid "Linked Document ID"
+msgstr "ID del documento vinculado"
+
+#. module: excalidraw_for_odoo
+msgid "Untitled drawing"
+msgstr "Dibujo sin título"
+
+#. module: excalidraw_for_odoo
+msgid ""
+"The scene is not a valid Excalidraw document: it must be a JSON object with"
+" an 'elements' key."
+msgstr ""
+"La escena no es un documento Excalidraw válido: debe ser un objeto JSON con"
+" una clave 'elements'."
+
+#. module: excalidraw_for_odoo
+msgid "User"
+msgstr "Usuario"
+
+#. module: excalidraw_for_odoo
+msgid "Manager"
+msgstr "Administrador"
+
+#. module: excalidraw_for_odoo
+msgid "Drawings"
+msgstr "Dibujos"
+
+#. module: excalidraw_for_odoo
+msgid "Drawing"
+msgstr "Dibujo"
+
+#. module: excalidraw_for_odoo
+msgid "e.g. Sales flow sketch"
+msgstr "p. ej. Boceto de flujo de ventas"
+
+#. module: excalidraw_for_odoo
+msgid "Archived"
+msgstr "Archivado"
+
+#. module: excalidraw_for_odoo
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: excalidraw_for_odoo
+msgid "Last Modified"
+msgstr "Última modificación"
+
+#. module: excalidraw_for_odoo
+msgid "Create your first drawing"
+msgstr "Crea tu primer dibujo"
+
+#. module: excalidraw_for_odoo
+msgid "Sketch diagrams, flows and ideas with the embedded Excalidraw whiteboard."
+msgstr "Bosqueja diagramas, flujos e ideas con la pizarra Excalidraw integrada."
+
+#. module: excalidraw_for_odoo
+msgid "No preview yet. Switch to edit mode to draw."
+msgstr "Sin vista previa todavía. Cambia a modo edición para dibujar."
+
+#. module: excalidraw_for_odoo
+msgid "Loading the Excalidraw editor…"
+msgstr "Cargando el editor de Excalidraw…"
+
+#. module: excalidraw_for_odoo
+msgid "Could not load the Excalidraw editor"
+msgstr "No se pudo cargar el editor de Excalidraw"
+
+#. module: excalidraw_for_odoo
+msgid "Drawing preview"
+msgstr "Vista previa del dibujo"

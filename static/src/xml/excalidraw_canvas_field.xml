@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="excalidraw_for_odoo.ExcalidrawCanvasField" owl="1">
+        <div class="o_excalidraw_for_odoo_field">
+            <t t-if="props.readonly">
+                <div class="o_excalidraw_preview d-flex justify-content-center align-items-center">
+                    <img
+                        t-if="previewSrc"
+                        t-att-src="previewSrc"
+                        alt="Drawing preview"
+                        class="img-fluid rounded shadow-sm"
+                    />
+                    <div t-else="" class="text-muted p-4 fst-italic">
+                        No preview yet. Switch to edit mode to draw.
+                    </div>
+                </div>
+            </t>
+            <t t-else="">
+                <div t-if="state.error" class="alert alert-danger mb-2" role="alert" t-esc="state.error"/>
+                <div class="o_excalidraw_canvas_wrap position-relative">
+                    <div class="o_excalidraw_canvas" t-ref="excalidraw_container"/>
+                    <div
+                        t-if="state.loading"
+                        class="o_excalidraw_spinner position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                    >
+                        <span class="spinner-border me-2" role="status"/>
+                        <span>Loading the Excalidraw editor…</span>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>
