@@ -63,7 +63,9 @@ class TestExcalidrawDrawing(TransactionCase):
         drawing = self.env["excalidraw.drawing"].create({"name": "To archive"})
         drawing.action_archive()
         self.assertFalse(drawing.active)
-        self.assertFalse(self.env["excalidraw.drawing"].search([("name", "=", "To archive")]))
+        self.assertFalse(
+            self.env["excalidraw.drawing"].search([("name", "=", "To archive")])
+        )
         drawing.action_unarchive()
         self.assertTrue(drawing.active)
 
@@ -80,7 +82,9 @@ class TestExcalidrawDrawing(TransactionCase):
     def test_manager_can_delete(self):
         drawing = self.env["excalidraw.drawing"].create({"name": "Doomed"})
         drawing.with_user(self.drawing_manager).unlink()
-        self.assertFalse(self.env["excalidraw.drawing"].search([("name", "=", "Doomed")]))
+        self.assertFalse(
+            self.env["excalidraw.drawing"].search([("name", "=", "Doomed")])
+        )
 
     def test_chatter_message(self):
         drawing = self.env["excalidraw.drawing"].create({"name": "With chatter"})

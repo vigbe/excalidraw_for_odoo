@@ -131,21 +131,7 @@ msgid "Sketch diagrams, flows and ideas with the embedded Excalidraw whiteboard.
 msgstr ""
 
 #. module: excalidraw_for_odoo
-#: model_terms:excalidraw_for_odoo.excalidraw_canvas_field
-msgid "No preview yet. Switch to edit mode to draw."
-msgstr ""
-
-#. module: excalidraw_for_odoo
-#: model_terms:excalidraw_for_odoo.excalidraw_canvas_field
-msgid "Loading the Excalidraw editor…"
-msgstr ""
-
-#. module: excalidraw_for_odoo
 #: code:addons/excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js:0
 msgid "Could not load the Excalidraw editor"
 msgstr ""
 
-#. module: excalidraw_for_odoo
-#: model_terms:excalidraw_for_odoo.excalidraw_canvas_field
-msgid "Drawing preview"
-msgstr ""

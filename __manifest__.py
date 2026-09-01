@@ -42,7 +42,6 @@ Roadmap (not included): real-time multi-user collaboration.
     ],
     "assets": {
         "web.assets_backend": [
-            "excalidraw_for_odoo/static/lib/excalidraw/excalidraw.css",
             "excalidraw_for_odoo/static/src/scss/excalidraw.scss",
             "excalidraw_for_odoo/static/src/js/excalidraw_loader.js",
             "excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js",

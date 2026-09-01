@@ -1,8 +1,14 @@
 /** @odoo-module **/
 
-import { Component, onWillUnmount, useEffect, useRef, useState } from "@odoo/owl";
+import {
+    Component,
+    onWillUnmount,
+    useEffect,
+    useRef,
+    useState,
+} from "@odoo/owl";
 import { registry } from "@web/core/registry";
-import { useService } from "@web/core/utils/hooks";
+import { user } from "@web/core/user";
 import { _t } from "@web/core/l10n/translation";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
@@ -69,8 +75,6 @@ export class ExcalidrawCanvasField extends Component {
     static props = { ...standardFieldProps };
 
     setup() {
-        this.notification = useService("notification");
-        this.user = useService("user");
         this.containerRef = useRef("excalidraw_container");
 
         this.state = useState({ loading: false, error: "" });
@@ -96,7 +100,7 @@ export class ExcalidrawCanvasField extends Component {
                 }
                 return () => this.destroyEditor();
             },
-            () => [this.props.record.resId, this.props.readonly]
+            () => [this.props.record.resId, this.props.readonly],
         );
 
         onWillUnmount(() => this.destroyEditor());
@@ -126,17 +130,18 @@ export class ExcalidrawCanvasField extends Component {
             this.reactRoot.render(
                 lib.React.createElement(lib.Excalidraw, {
                     initialData: this.buildInitialData(),
-                    onChange: (elements, appState) => this.scheduleSceneUpdate(elements, appState),
+                    onChange: (elements, appState) =>
+                        this.scheduleSceneUpdate(elements, appState),
                     excalidrawAPI: (api) => {
                         if (token === this.mountToken) {
                             this.excalidrawAPI = api;
                         }
                     },
-                    lang: excalidrawLang(this.user.lang),
+                    lang: excalidrawLang(user.lang),
                     theme: webclientTheme(),
                     name: this.props.record.data.name || "drawing",
                     gridMode: null,
-                })
+                }),
             );
         } catch (error) {
             if (token === this.mountToken) {
@@ -187,7 +192,9 @@ export class ExcalidrawCanvasField extends Component {
                     return {
                         elements: parsed.elements,
                         appState: {
-                            viewBackgroundColor: parsed.appState?.viewBackgroundColor || "#ffffff",
+                            viewBackgroundColor:
+                                parsed.appState?.viewBackgroundColor ||
+                                "#ffffff",
                         },
                         files: parsed.files || {},
                     };
@@ -196,12 +203,18 @@ export class ExcalidrawCanvasField extends Component {
                 // Fall back to a fresh scene when stored data is invalid.
             }
         }
-        return { appState: { viewBackgroundColor: "#ffffff" }, elements: [], files: {} };
+        return {
+            appState: { viewBackgroundColor: "#ffffff" },
+            elements: [],
+            files: {},
+        };
     }
 
     serializeScene(elements, appState) {
         const files = {};
-        for (const [fileId, file] of Object.entries(this.excalidrawAPI?.getFiles() || {})) {
+        for (const [fileId, file] of Object.entries(
+            this.excalidrawAPI?.getFiles() || {},
+        )) {
             files[fileId] = {
                 dataURL: file.dataURL,
                 mimeType: file.mimeType,
@@ -227,9 +240,15 @@ export class ExcalidrawCanvasField extends Component {
         this._latestElements = elements;
         this._latestAppState = appState;
         clearTimeout(this._sceneTimer);
-        this._sceneTimer = setTimeout(() => this.flushSceneNow(), SCENE_UPDATE_DELAY);
+        this._sceneTimer = setTimeout(
+            () => this.flushSceneNow(),
+            SCENE_UPDATE_DELAY,
+        );
         clearTimeout(this._previewTimer);
-        this._previewTimer = setTimeout(() => this.updatePreview(), PREVIEW_UPDATE_DELAY);
+        this._previewTimer = setTimeout(
+            () => this.updatePreview(),
+            PREVIEW_UPDATE_DELAY,
+        );
     }
 
     flushSceneNow() {
@@ -237,7 +256,10 @@ export class ExcalidrawCanvasField extends Component {
         if (!this._latestElements) {
             return;
         }
-        const json = this.serializeScene(this._latestElements, this._latestAppState);
+        const json = this.serializeScene(
+            this._latestElements,
+            this._latestAppState,
+        );
         if (json !== this._lastSerializedScene) {
             this._lastSerializedScene = json;
             this.props.record.update({ scene_data: json });
@@ -259,11 +281,16 @@ export class ExcalidrawCanvasField extends Component {
             });
             const dataUrl = await previewDataUrl(blob, PREVIEW_MAX_WIDTH);
             if (dataUrl && !this.props.readonly) {
-                this.props.record.update({ preview_image: dataUrl.split(",")[1] });
+                this.props.record.update({
+                    preview_image: dataUrl.split(",")[1],
+                });
             }
         } catch (error) {
             // Preview generation is best-effort: never block drawing on it.
-            console.error("excalidraw_for_odoo: preview generation failed", error);
+            console.error(
+                "excalidraw_for_odoo: preview generation failed",
+                error,
+            );
         }
     }
 }
