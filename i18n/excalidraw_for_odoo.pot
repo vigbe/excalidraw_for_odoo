@@ -135,3 +135,12 @@ msgstr ""
 msgid "Could not load the Excalidraw editor"
 msgstr ""
 
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js:0
+msgid "Switch to light theme"
+msgstr ""
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js:0
+msgid "Switch to dark theme"
+msgstr ""

@@ -34,9 +34,13 @@ function excalidrawLang(odooLang) {
     return fallbacks[base] || normalized;
 }
 
-/** Detect the Odoo webclient color scheme ("light" | "dark"). */
+/** Detect the Odoo webclient color scheme ("light" | "dark").
+ * Odoo 19 exposes the --o-webclient-color-scheme custom property on the
+ * webclient root (body.o_web_client), with values "bright" | "dark". */
 function webclientTheme() {
-    const webclient = document.querySelector(".o_webclient");
+    const webclient = document.querySelector(
+        "body.o_web_client, .o_webclient"
+    );
     if (webclient) {
         const scheme = getComputedStyle(webclient)
             .getPropertyValue("--o-webclient-color-scheme")
@@ -83,6 +87,12 @@ export class ExcalidrawCanvasField extends Component {
         this.excalidrawAPI = null;
         this.mountToken = 0;
 
+        // Editor theme: null = follow the webclient color scheme, otherwise
+        // a manual "light" | "dark" choice kept until the widget unmounts.
+        this.manualTheme = null;
+        this.reactProps = null;
+        this._schemeObserver = null;
+
         this._sceneTimer = null;
         this._previewTimer = null;
         this._latestElements = null;
@@ -104,11 +114,53 @@ export class ExcalidrawCanvasField extends Component {
         );
 
         onWillUnmount(() => this.destroyEditor());
+
+        // Follow webclient dark-mode switches while no manual choice was made.
+        this._schemeObserver = new MutationObserver(() => {
+            if (this.manualTheme === null) {
+                this.applyEditorTheme();
+            }
+        });
+        this._schemeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class", "style", "data-color-mode"],
+        });
+        this._schemeObserver.observe(document.body, {
+            attributes: true,
+            attributeFilter: ["class", "style"],
+        });
     }
 
     get previewSrc() {
         const data = this.props.record.data.preview_image;
         return data ? `data:image/jpeg;base64,${data}` : false;
+    }
+
+    get effectiveTheme() {
+        return this.manualTheme ?? webclientTheme();
+    }
+
+    get themeTooltip() {
+        return this.effectiveTheme === "dark"
+            ? _t("Switch to light theme")
+            : _t("Switch to dark theme");
+    }
+
+    toggleTheme() {
+        this.manualTheme = this.effectiveTheme === "dark" ? "light" : "dark";
+        this.applyEditorTheme();
+    }
+
+    /** Re-render the React root with the current theme, preserving the scene
+     * (initialData only applies on mount, so React reconciliation keeps the
+     * internal editor state intact). */
+    applyEditorTheme() {
+        if (this.reactProps && this.reactRoot && this.lib) {
+            this.reactProps.theme = this.effectiveTheme;
+            this.reactRoot.render(
+                this.lib.React.createElement(this.lib.Excalidraw, this.reactProps)
+            );
+        }
     }
 
     // ------------------------------------------------------------------
@@ -127,21 +179,22 @@ export class ExcalidrawCanvasField extends Component {
             this.lib = lib;
             this._lastSerializedScene = this.props.record.data.scene_data || "";
             this.reactRoot = lib.ReactDOMClient.createRoot(el);
+            this.reactProps = {
+                initialData: this.buildInitialData(),
+                onChange: (elements, appState) =>
+                    this.scheduleSceneUpdate(elements, appState),
+                excalidrawAPI: (api) => {
+                    if (token === this.mountToken) {
+                        this.excalidrawAPI = api;
+                    }
+                },
+                lang: excalidrawLang(user.lang),
+                theme: this.effectiveTheme,
+                name: this.props.record.data.name || "drawing",
+                gridMode: null,
+            };
             this.reactRoot.render(
-                lib.React.createElement(lib.Excalidraw, {
-                    initialData: this.buildInitialData(),
-                    onChange: (elements, appState) =>
-                        this.scheduleSceneUpdate(elements, appState),
-                    excalidrawAPI: (api) => {
-                        if (token === this.mountToken) {
-                            this.excalidrawAPI = api;
-                        }
-                    },
-                    lang: excalidrawLang(user.lang),
-                    theme: webclientTheme(),
-                    name: this.props.record.data.name || "drawing",
-                    gridMode: null,
-                }),
+                lib.React.createElement(lib.Excalidraw, this.reactProps),
             );
         } catch (error) {
             if (token === this.mountToken) {
@@ -165,9 +218,14 @@ export class ExcalidrawCanvasField extends Component {
             clearTimeout(this._previewTimer);
             this._previewTimer = null;
         }
-        this.mountToken++;
-        this._latestElements = null;
-        this._latestAppState = null;
+            this.mountToken++;
+            this._latestElements = null;
+            this._latestAppState = null;
+            this.reactProps = null;
+            if (this._schemeObserver) {
+                this._schemeObserver.disconnect();
+                this._schemeObserver = null;
+            }
         if (this.reactRoot) {
             try {
                 this.reactRoot.unmount();

@@ -134,3 +134,12 @@ msgstr "Bosqueja diagramas, flujos e ideas con la pizarra Excalidraw integrada."
 msgid "Could not load the Excalidraw editor"
 msgstr "No se pudo cargar el editor de Excalidraw"
 
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js:0
+msgid "Switch to light theme"
+msgstr "Cambiar a tema claro"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js:0
+msgid "Switch to dark theme"
+msgstr "Cambiar a tema oscuro"
