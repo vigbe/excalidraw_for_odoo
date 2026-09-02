@@ -1,3 +1,10 @@
+// Odoo renders field widget roots as inline-block; their intrinsic width
+// collapses to the canvas content (zero) — force block layout at full width.
+.o_field_excalidraw_canvas {
+    display: block;
+    width: 100%;
+}
+
 .o_excalidraw_for_odoo_field {
     width: 100%;
 

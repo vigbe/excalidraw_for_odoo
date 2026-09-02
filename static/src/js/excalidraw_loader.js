@@ -62,11 +62,13 @@ export function loadExcalidraw() {
             "/excalidraw_for_odoo",
             "/static/lib/excalidraw/excalidraw.vendor.js",
         ].join("");
-        loadPromise = import(/* webpackIgnore: true */ specifier).catch((error) => {
-            // Allow a later retry instead of caching the failure forever.
-            loadPromise = null;
-            throw error;
-        });
+        loadPromise = import(/* webpackIgnore: true */ specifier).catch(
+            (error) => {
+                // Allow a later retry instead of caching the failure forever.
+                loadPromise = null;
+                throw error;
+            },
+        );
     }
     return loadPromise;
 }
