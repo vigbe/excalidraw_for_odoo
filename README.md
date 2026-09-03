@@ -1,6 +1,6 @@
 # excalidraw_for_odoo
 
-Excalidraw whiteboard embedded as a native Odoo 19 Community application.
+Excalidraw whiteboard embedded as a native Odoo 17 Community application.
 
 The vendored library (`@excalidraw/excalidraw` 0.18.1, MIT) plus its fonts are
 bundled inside the module with esbuild, so the editor works fully offline and
@@ -18,7 +18,7 @@ behind proxies — no external CDN is contacted.
   from the webclient color scheme.
 - Chatter + activities (`mail.thread`, `mail.activity.mixin`).
 - Security: `User` group (create/edit) and `Manager` group (also delete),
-  using the Odoo 19 `res.groups.privilege` pattern.
+  using classic security groups (category + implied groups).
 
 ## Installation
 
@@ -26,7 +26,7 @@ The module directory is a standalone git repository (like every addon in this
 workspace). Register it in your Odoo addons path and install **Excalidraw for
 Odoo** from the Apps menu (developer mode may be needed for non-store apps).
 
-Dependencies: `web`, `mail` (Odoo 19 Community).
+Dependencies: `web`, `mail` (Odoo 17 Community).
 
 After installing, grant the *Excalidraw / User* (and optionally
 *Excalidraw / Manager*) group to the users who need the tool.

@@ -37,7 +37,11 @@
                     <field name="res_id" invisible="1"/>
                     <field name="scene_data" widget="excalidraw_canvas" nolabel="1" colspan="2" readonly="0"/>
                 </sheet>
-                <chatter/>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids"/>
+                    </div>
             </form>
         </field>
     </record>
