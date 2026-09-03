@@ -85,13 +85,3 @@ class TestExcalidrawDrawing(TransactionCase):
         self.assertFalse(
             self.env["excalidraw.drawing"].search([("name", "=", "Doomed")])
         )
-
-    def test_chatter_message(self):
-        drawing = self.env["excalidraw.drawing"].create({"name": "With chatter"})
-        drawing.message_post(body="First comment")
-        # Note: create() also logs a tracking/system message in the chatter,
-        # and bodies are stored as markup (<p>First comment</p>).
-        posted = drawing.message_ids.filtered(
-            lambda m: "First comment" in (m.body or "")
-        )
-        self.assertEqual(len(posted), 1)

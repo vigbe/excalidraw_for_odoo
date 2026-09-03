@@ -21,7 +21,6 @@ Features
 * Scenes are persisted as editable JSON (excalidraw.drawing.scene_data).
 * Automatic PNG preview stored as attachment for list thumbnails.
 * Built-in Excalidraw export dialog (PNG / SVG) and .excalidraw file import.
-* Chatter + activities on drawings for team collaboration notes.
 * Permission model: Users (read/write/create) and Managers (also delete).
 * Vendored library: @excalidraw/excalidraw 0.18.1 (MIT) bundled with esbuild,
   fonts served locally via window.EXCALIDRAW_ASSET_PATH.
@@ -33,7 +32,6 @@ Roadmap (not included): real-time multi-user collaboration.
     "license": "LGPL-3",
     "depends": [
         "web",
-        "mail",
     ],
     "data": [
         "security/excalidraw_security.xml",

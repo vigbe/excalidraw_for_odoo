@@ -37,7 +37,6 @@
                     <field name="res_id" invisible="1"/>
                     <field name="scene_data" widget="excalidraw_canvas" nolabel="1" colspan="2" readonly="0"/>
                 </sheet>
-                <chatter/>
             </form>
         </field>
     </record>

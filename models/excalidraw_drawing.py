@@ -20,10 +20,9 @@ class ExcalidrawDrawing(models.Model):
 
     _name = "excalidraw.drawing"
     _description = "Excalidraw Drawing"
-    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "write_date desc"
 
-    name = fields.Char(string="Name", required=True, tracking=True)
+    name = fields.Char(string="Name", required=True)
     scene_data = fields.Text(
         string="Scene",
         help="Excalidraw scene JSON document (elements + editor state).",
