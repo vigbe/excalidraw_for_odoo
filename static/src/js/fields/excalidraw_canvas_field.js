@@ -38,9 +38,7 @@ function excalidrawLang(odooLang) {
  * Odoo 19 exposes the --o-webclient-color-scheme custom property on the
  * webclient root (body.o_web_client), with values "bright" | "dark". */
 function webclientTheme() {
-    const webclient = document.querySelector(
-        "body.o_web_client, .o_webclient"
-    );
+    const webclient = document.querySelector("body.o_web_client, .o_webclient");
     if (webclient) {
         const scheme = getComputedStyle(webclient)
             .getPropertyValue("--o-webclient-color-scheme")
@@ -158,7 +156,10 @@ export class ExcalidrawCanvasField extends Component {
         if (this.reactProps && this.reactRoot && this.lib) {
             this.reactProps.theme = this.effectiveTheme;
             this.reactRoot.render(
-                this.lib.React.createElement(this.lib.Excalidraw, this.reactProps)
+                this.lib.React.createElement(
+                    this.lib.Excalidraw,
+                    this.reactProps,
+                ),
             );
         }
     }
@@ -218,14 +219,14 @@ export class ExcalidrawCanvasField extends Component {
             clearTimeout(this._previewTimer);
             this._previewTimer = null;
         }
-            this.mountToken++;
-            this._latestElements = null;
-            this._latestAppState = null;
-            this.reactProps = null;
-            if (this._schemeObserver) {
-                this._schemeObserver.disconnect();
-                this._schemeObserver = null;
-            }
+        this.mountToken++;
+        this._latestElements = null;
+        this._latestAppState = null;
+        this.reactProps = null;
+        if (this._schemeObserver) {
+            this._schemeObserver.disconnect();
+            this._schemeObserver = null;
+        }
         if (this.reactRoot) {
             try {
                 this.reactRoot.unmount();
