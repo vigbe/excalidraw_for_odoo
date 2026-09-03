@@ -54,9 +54,20 @@
     }
 }
 
-// Small screens (phones): the Excalidraw mobile toolbar is a horizontal
-// strip whose natural width (~373px) exceeds narrow form containers — let
-// the icon stack wrap to a second row instead of clipping the last icons.
+// Phones / narrow screens.
+//
+// Excalidraw sizes its mobile tool strip against the *viewport* (media
+// queries at 450px/379px, `max-width: 98vw`), but this editor lives in an
+// Odoo form: sheet paddings and dialog chrome make the canvas narrower
+// than the viewport, so the strip overflows and the last icons get
+// clipped. `.App-top-bar` only exists in Excalidraw's mobile layout, so
+// the rules below restyle exactly that bar:
+//   * horizontal `Stack`s are CSS grids (`grid-auto-flow: column`) and
+//     cannot wrap — convert them to wrapping flex rows so the strip breaks
+//     into centered rows instead of clipping;
+//   * keep the tool island inside the widget (`100%`, not `98vw`);
+//   * the pen/lock/hand toggles are absolutely pinned 5rem below the top
+//     edge and would overlap the wrapped rows — fold them into the flow.
 @media (max-width: 575px) {
     .o_excalidraw_for_odoo_field {
         .o_excalidraw_canvas_wrap {
@@ -64,12 +75,23 @@
             min-height: 380px;
         }
 
-        .excalidraw .App-toolbar--mobile {
-            max-width: calc(100% - 8px);
-
-            .Stack.Stack_horizontal {
+        .excalidraw .App-top-bar {
+            .Stack_horizontal {
+                display: flex;
                 flex-wrap: wrap;
                 justify-content: center;
+            }
+
+            .App-toolbar--mobile {
+                max-width: 100%;
+            }
+
+            .mobile-misc-tools-container {
+                position: static;
+                flex-direction: row;
+                align-items: center;
+                border: 1px solid var(--sidebar-border-color);
+                border-radius: var(--border-radius-lg);
             }
         }
     }
