@@ -14,7 +14,7 @@ class ExcalidrawDrawing(models.Model):
     The scene itself is stored as the Excalidraw scene JSON document
     (``{"type": "excalidraw", "version": 2, "elements": [...], ...}``) so it
     stays fully editable by the embedded editor and importable/exportable as
-    a standard ``.excalidraw`` file. A PNG preview is generated client-side
+    a standard ``.excalidraw`` file. A JPEG preview is generated client-side
     (browser canvas) and kept as an attachment for list thumbnails.
     """
 

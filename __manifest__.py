@@ -19,7 +19,7 @@ Features
 * Dedicated "Excalidraw" app with a list of drawings and a full editor form.
 * Hand-drawn style diagrams: rectangles, arrows, text, freedraw, images...
 * Scenes are persisted as editable JSON (excalidraw.drawing.scene_data).
-* Automatic PNG preview stored as attachment for list thumbnails.
+* Automatic JPEG preview stored as attachment for list thumbnails.
 * Built-in Excalidraw export dialog (PNG / SVG) and .excalidraw file import.
 * Chatter + activities on drawings for team collaboration notes.
 * Permission model: Users (read/write/create) and Managers (also delete).
