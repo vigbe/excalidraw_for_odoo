@@ -28,8 +28,10 @@ Features
 
 Roadmap (not included): real-time multi-user collaboration.
     """,
-    "author": "ia-prop.com",
-    "website": "https://ia-prop.com",
+    "author": "Victor Bastías Escobar",
+    "website": "https://vicbas.com",
+    "support": "contacto@vicbas.com",
+    "maintainer": "Victor Bastías Escobar",
     "license": "LGPL-3",
     "depends": [
         "web",
@@ -39,6 +41,9 @@ Roadmap (not included): real-time multi-user collaboration.
         "security/excalidraw_security.xml",
         "security/ir.model.access.csv",
         "views/excalidraw_drawing_views.xml",
+    ],
+    "images": [
+        "static/description/thumbnail.png",
     ],
     "assets": {
         "web.assets_backend": [

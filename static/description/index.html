@@ -1,18 +1,113 @@
-<section style="max-width: 800px; margin: 0 auto">
-    <h2 style="text-align: center">Excalidraw for Odoo</h2>
-    <p style="text-align: center">
-        The Excalidraw virtual whiteboard, embedded as a native Odoo
-        application. 100% self-hosted: the library and its fonts are vendored
-        inside the module, so no external CDN is required.
-    </p>
-    <ul>
-        <li>Draw hand-styled diagrams, flows, floor plans and sketches.</li>
-        <li>
-            Scenes persist as editable <code>.excalidraw</code>-compatible JSON.
-        </li>
-        <li>Automatic PNG previews in the list view.</li>
-        <li>Built-in PNG / SVG export and scene file import.</li>
-        <li>Chatter and activities on every drawing.</li>
-        <li>User / Manager permission groups (Odoo 19 privilege system).</li>
-    </ul>
+<section class="oe_dark">
+    <div class="oe_row oe_spaced" style="max-width: 900px; margin: 0 auto">
+        <!-- Hero -->
+        <div class="oe_span12 text-center" style="padding: 30px 0">
+            <h2 class="oe_slogan" style="font-size: 2.5em; color: #7c7bad">
+                Excalidraw for Odoo
+            </h2>
+            <h3 class="oe_slogan" style="font-size: 1.3em; color: #666; font-weight: 300">
+                Embedded Excalidraw whiteboard: draw diagrams and sketches inside Odoo
+            </h3>
+            <p style="margin-top: 10px; font-size: 1.1em">
+                Developed by
+                <a href="https://vicbas.com" target="_blank" style="font-weight: bold; color: #7c7bad">vicbas.com</a>
+            </p>
+        </div>
+
+        <!-- Banner -->
+        <div class="oe_span12 text-center">
+            <div class="oe_demo oe_picture oe_screenshot">
+                <img
+                    src="thumbnail.png"
+                    alt="Excalidraw for Odoo &#8212; module banner"
+                    style="width: 100%; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); margin: 10px 0;"
+                />
+            </div>
+        </div>
+
+        <!-- Key Features -->
+        <div class="oe_span12 oe_mt32 text-center" style="padding: 20px 0">
+            <h3 style="color: #7c7bad">Key Features</h3>
+            <div class="oe_span4 oe_mt16 text-center">
+                <span class="fa fa-list-alt fa-3x" style="color: #7c7bad" />
+                <h4>Dedicated App</h4>
+                <p class="text-muted">A dedicated Excalidraw app with a drawings list and a full editor.</p>
+            </div>
+            <div class="oe_span4 oe_mt16 text-center">
+                <span class="fa fa-pencil fa-3x" style="color: #7c7bad" />
+                <h4>Hand-Drawn Diagrams</h4>
+                <p class="text-muted">Shapes, arrows, freedraw, text and images in the classic sketchy style.</p>
+            </div>
+            <div class="oe_span4 oe_mt16 text-center">
+                <span class="fa fa-server fa-3x" style="color: #7c7bad" />
+                <h4>100% Self-Hosted</h4>
+                <p class="text-muted">Vendored library and fonts inside the module &#8212; no CDN, works offline and behind proxies.</p>
+            </div>
+            <div class="oe_span4 oe_mt16 text-center">
+                <span class="fa fa-file-code-o fa-3x" style="color: #7c7bad" />
+                <h4>Standard Scene Files</h4>
+                <p class="text-muted">Scenes persist as standard .excalidraw JSON &#8212; import/export compatible.</p>
+            </div>
+            <div class="oe_span4 oe_mt16 text-center">
+                <span class="fa fa-picture-o fa-3x" style="color: #7c7bad" />
+                <h4>Preview Thumbnails</h4>
+                <p class="text-muted">Automatic preview generated in the browser for list-view thumbnails.</p>
+            </div>
+            <div class="oe_span4 oe_mt16 text-center">
+                <span class="fa fa-users fa-3x" style="color: #7c7bad" />
+                <h4>Chatter &amp; Permissions</h4>
+                <p class="text-muted">Chatter and activities on every drawing, with User/Manager groups.</p>
+            </div>
+        </div>
+
+        <!-- Why self-hosted? -->
+        <div class="oe_span12 oe_mt32" style="padding: 20px 0; border-top: 1px solid #eee">
+            <h3 class="text-center" style="color: #7c7bad">Why Self-Hosted?</h3>
+            <p class="text-center text-muted" style="max-width: 700px; margin: 0 auto; font-size: 1.1em; line-height: 1.8">
+                The Excalidraw library (@excalidraw/excalidraw 0.18.1) and its fonts are bundled inside
+                the module and served from your own Odoo instance. No external CDN is contacted: your
+                diagrams never leave your server, the editor works fully offline, and it behaves behind
+                even the strictest proxies &#8212; keeping your content private and your installation
+                self-contained.
+            </p>
+        </div>
+
+        <!-- Screenshots -->
+        <div class="oe_span12 oe_mt32" style="padding: 20px 0; border-top: 1px solid #eee">
+            <h3 class="text-center" style="color: #7c7bad">Screenshots</h3>
+            <!--
+            Uncomment after capturing real screenshots:
+            <div class="oe_span4 oe_mt16 text-center">
+                <figure style="margin: 0">
+                    <img src="images/app_list.png" alt="Excalidraw app &#8212; drawings list" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;" />
+                    <figcaption class="text-muted" style="margin-top: 6px">Drawings list with preview thumbnails</figcaption>
+                </figure>
+            </div>
+            <div class="oe_span4 oe_mt16 text-center">
+                <figure style="margin: 0">
+                    <img src="images/editor.png" alt="Excalidraw editor embedded in Odoo" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;" />
+                    <figcaption class="text-muted" style="margin-top: 6px">Full editor inside the Odoo form view</figcaption>
+                </figure>
+            </div>
+            <div class="oe_span4 oe_mt16 text-center">
+                <figure style="margin: 0">
+                    <img src="images/export_menu.png" alt="Export and import menu" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;" />
+                    <figcaption class="text-muted" style="margin-top: 6px">PNG / SVG export and .excalidraw import</figcaption>
+                </figure>
+            </div>
+            -->
+        </div>
+
+        <!-- Footer -->
+        <div class="oe_span12 oe_mt32 text-center" style="padding: 25px 0; border-top: 1px solid #eee">
+            <p class="text-muted" style="margin-bottom: 6px">
+                &#169; Victor Bast&#237;as Escobar &#8212;
+                <a href="https://vicbas.com" target="_blank" style="font-weight: bold; color: #7c7bad">vicbas.com</a>
+            </p>
+            <p class="text-muted">
+                Excalidraw is vendored under its MIT license (@excalidraw/excalidraw 0.18.1) &#183;
+                Module code licensed under LGPL-3
+            </p>
+        </div>
+    </div>
 </section>
