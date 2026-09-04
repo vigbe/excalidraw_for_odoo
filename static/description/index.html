@@ -1,18 +1,31 @@
 <section style="max-width: 800px; margin: 0 auto">
     <h2 style="text-align: center">Excalidraw for Odoo</h2>
     <p style="text-align: center">
-        The Excalidraw virtual whiteboard, embedded as a native Odoo
-        application. 100% self-hosted: the library and its fonts are vendored
-        inside the module, so no external CDN is required.
+        The Excalidraw virtual whiteboard as a chatter tool for every record.
+        100% self-hosted: the library and its fonts are vendored inside the
+        module, so no external CDN is required.
     </p>
     <ul>
-        <li>Draw hand-styled diagrams, flows, floor plans and sketches.</li>
         <li>
-            Scenes persist as editable <code>.excalidraw</code>-compatible JSON.
+            Pencil button next to the paperclip in every record chatter
+            (saved records, Odoo 19).
         </li>
-        <li>Automatic PNG previews in the list view.</li>
+        <li>
+            Picker for existing drawings + fullscreen editor; scenes reopen
+            exactly where you left them.
+        </li>
+        <li>
+            Each drawing persists as editable <code>.excalidraw</code>-compatible
+            JSON plus an automatic PNG render on the record.
+        </li>
+        <li>Autosave: 45 s debounce, 60 s max latency, flush on close.</li>
         <li>Built-in PNG / SVG export and scene file import.</li>
-        <li>Chatter and activities on every drawing.</li>
         <li>User / Manager permission groups (Odoo 19 privilege system).</li>
     </ul>
+    <p style="text-align: center">
+        <em>
+            Note: version 19.0.2.0.0 replaces the former standalone Excalidraw
+            app — see the README for the upgrade runbook.
+        </em>
+    </p>
 </section>

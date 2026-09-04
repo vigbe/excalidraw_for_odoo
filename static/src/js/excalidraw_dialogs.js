@@ -232,7 +232,7 @@ export class ExcalidrawPickerDialog extends Component {
 // ─────────────────────────────────────────────────────────────────
 //  Editor dialog — fullscreen web Dialog hosting the vendored React
 //  Excalidraw bundle (React lifecycle ported verbatim from the legacy
-//  excalidraw_canvas_field.js — design §3.2.2 / D10).
+//  standalone field widget — design §3.2.2 / D10).
 // ─────────────────────────────────────────────────────────────────
 export class ExcalidrawEditorDialog extends Component {
     static components = { Dialog };

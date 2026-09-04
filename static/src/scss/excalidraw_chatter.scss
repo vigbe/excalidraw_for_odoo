@@ -3,7 +3,7 @@
 //
 // NOTE: plain declarations only — libsass (< 3.7) treats css min()/max()
 // as its own SassScript function and fails on mixed units (documented lib
-// constraint, kept from the legacy excalidraw.scss).
+// constraint, inherited from the legacy module styles).
 // ─────────────────────────────────────────────────────────────────
 
 // Fullscreen editor dialog: core's fullscreen/size="fullscreen" chrome sizes

@@ -29,10 +29,11 @@ Features
 
 Breaking change (19.0.2.0.0)
 ---------------------------
-The standalone "Excalidraw" application and its excalidraw.drawing model were
-removed. Updating the module permanently drops the excalidraw_drawing table;
-previously stored standalone drawings are not migrated. Security groups are
-kept (they gate the new chatter tool).
+The standalone "Excalidraw" application and its drawing model were removed.
+Updating permanently destroys previously stored standalone drawings (they
+are not migrated). Security groups are kept (they gate the new chatter
+tool). Note: Odoo keeps the old table on update — see the README deploy
+runbook to drop it explicitly and reclaim the space.
         """,
     "author": "ia-prop.com",
     "website": "https://ia-prop.com",

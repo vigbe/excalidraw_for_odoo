@@ -69,9 +69,9 @@ class ExcalidrawChatterController(http.Controller):
     def _parse_scene(self, scene):
         """Validate the posted scene document (BR-SCENE-1) and return its text.
 
-        Mirrors the invariant previously enforced by
-        ``excalidraw.drawing._parse_scene``: JSON dict containing an
-        ``elements`` key (which may be an empty list).
+        Mirrors the invariant previously enforced by the legacy standalone
+        editor: JSON dict containing an ``elements`` key (which may be an
+        empty list).
         """
         if not isinstance(scene, str) or not scene.strip():
             raise ValueError(

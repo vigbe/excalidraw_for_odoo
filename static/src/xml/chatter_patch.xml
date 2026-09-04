@@ -60,7 +60,7 @@
     <!-- ============================================================
          Editor dialog: fullscreen web Dialog hosting the vendored
          React Excalidraw bundle (toolbar/spinner markup reused from
-         the legacy excalidraw_canvas_field.xml template).
+         the legacy standalone field widget template).
          ============================================================ -->
     <t t-name="excalidraw_for_odoo.EditorDialog" owl="1">
         <div>

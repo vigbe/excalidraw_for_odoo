@@ -1,35 +1,88 @@
 # excalidraw_for_odoo
 
-Excalidraw whiteboard embedded as a native Odoo 19 Community application.
+Excalidraw whiteboard embedded as a **chatter tool for every record** in
+Odoo 19 Community — a pencil button next to the paperclip, a drawing picker,
+and a fullscreen editor. The vendored library (`@excalidraw/excalidraw`
+0.18.1, MIT) plus its fonts are bundled inside the module with esbuild, so
+the editor works fully offline and behind proxies — no external CDN is
+contacted.
 
-The vendored library (`@excalidraw/excalidraw` 0.18.1, MIT) plus its fonts are
-bundled inside the module with esbuild, so the editor works fully offline and
-behind proxies — no external CDN is contacted.
+## Usage
 
-## Features
+1. Open any record that has a chatter and save it if it is new (the button
+   only renders on saved records: drawings attach to a `res_id`).
+2. Click the pencil button (**Add or edit a drawing…**) next to the
+   paperclip in the chatter.
+3. Pick an existing drawing or start a **New drawing** — the fullscreen
+   editor opens.
+4. Draw. Saves happen automatically:
+   - 45 s after you stop editing (inactivity debounce),
+   - at least every 60 s while the dialog is open (max-latency guard),
+   - immediately when the dialog closes (close flush),
+   - unchanged scenes are skipped (content hash — no redundant writes).
 
-- Dedicated **Excalidraw** app: list of drawings + full editor form.
-- Hand-drawn style shapes, arrows, freedraw, text, images and libraries.
-- Scenes stored as standard Excalidraw JSON (`scene_data`) — round-trip
-  compatible with `.excalidraw` files (import/export from the editor menu).
-- Automatic JPEG preview (`preview_image`) generated in the browser for list
-  thumbnails.
-- Editor UI localized from the Odoo user language and themed light/dark
-  from the webclient color scheme.
-- Chatter + activities (`mail.thread`, `mail.activity.mixin`).
-- Security: `User` group (create/edit) and `Manager` group (also delete),
-  using the Odoo 19 `res.groups.privilege` pattern.
+Opening an existing drawing from the picker resumes editing exactly where it
+was left (the scene JSON is the source of truth), at any time, on any
+chatter-capable record (partners, tasks, leads, …).
 
-## Installation
+## Storage model
 
-The module directory is a standalone git repository (like every addon in this
-workspace). Register it in your Odoo addons path and install **Excalidraw for
-Odoo** from the Apps menu (developer mode may be needed for non-store apps).
+Each drawing is a **pair of `ir.attachment` records** on the host record
+(`res_model` / `res_id`, `res_field = False`):
 
-Dependencies: `web`, `mail` (Odoo 19 Community).
+- `<name>.excalidraw` — the scene JSON (`application/json`), the editable
+  source of truth, round-trip compatible with `.excalidraw` files (import /
+  export from the editor's own menu).
+- `<name>.png` — a PNG render (`image/png`, exported at 2× scale) so the
+  drawing is visible in the chatter and anywhere attachments are shown.
 
-After installing, grant the *Excalidraw / User* (and optionally
-*Excalidraw / Manager*) group to the users who need the tool.
+Deleting either attachment is tolerated: the missing twin is regenerated on
+the next changed save. Only a `.excalidraw` attachment can be reopened for
+editing; a PNG alone is just the last render.
+
+**Concurrency:** concurrent editors of the same drawing are
+**last-write-wins** — the last save overwrites both the scene and the PNG.
+There is no locking or merge (by design, BR-CONC-1).
+
+## Security
+
+- *Excalidraw / User* — gates the chatter button and both JSON-RPC routes;
+  members can create and edit drawings **only on records they can write**
+  (the server re-checks access on every request; the button's client-side
+  visibility check is a UX nicety, not the enforcement).
+- *Excalidraw / Manager* — implies User; reserved for future manager-only
+  capabilities (e.g. deleting drawings from the picker).
+
+Groups use the Odoo 19 `res.groups.privilege` pattern and survived the
+19.0.2.0.0 update unchanged.
+
+## Breaking change — 19.0.2.0.0 (WIPE)
+
+The standalone **Excalidraw** application (menus, views, and the
+`excalidraw.drawing` model) was removed. Updating from 19.0.x to
+**19.0.2.0.0**:
+
+- deletes the model, its views, menus and ACLs from the registry
+  (automatic on `-u`);
+- does **not migrate** any standalone drawings — previously stored
+  `excalidraw.drawing` rows are **permanently destroyed** (one-way wipe,
+  accepted by design; there is no rollback once the update has run);
+- keeps the security groups — they now gate the chatter tool.
+
+### Deploy runbook (target databases)
+
+Odoo 19 keeps the table of a removed model on upgrade (module tables are
+only dropped at *uninstall*), so the registry cleanup alone leaves the old
+table behind. On every target database, run the update first, then reclaim
+the table explicitly:
+
+```sql
+DROP TABLE IF EXISTS excalidraw_drawing;
+```
+
+Alternatively, uninstall the module before updating — the destructive effect
+on standalone drawings is identical. Either way, **back up the database
+first** if the old drawings matter.
 
 ## Technical notes
 
@@ -40,9 +93,13 @@ After installing, grant the *Excalidraw / User* (and optionally
   `static/src/js/excalidraw_loader.js` so its relative chunk URLs resolve.
 - Fonts resolve through `window.EXCALIDRAW_ASSET_PATH` pointing at the
   module static folder.
-- The field widget `excalidraw_canvas` (`excalidraw.drawing.scene_data`)
-  mounts the React editor inside the OWL form view; in readonly mode the
-  stored preview is shown instead.
+- The chatter button is an OWL patch of `mail.Chatter` (injected after the
+  attach-files button); the picker and the editor are fullscreen OWL dialogs
+  (`static/src/js/excalidraw_dialogs.js`).
+- Two JSON-RPC controller routes (`/excalidraw/chatter/save` and
+  `/excalidraw/chatter/scene`) enforce, in order: group gate →
+  chatter-capable-model gate → record-existence gate → write/read access —
+  before anything is stored or returned.
 
 Rebuilding the vendor bundle:
 
@@ -68,5 +125,6 @@ cp node_modules/@excalidraw/excalidraw/dist/prod/index.css static/lib/excalidraw
 
 ## Roadmap
 
+- Reopen a drawing by clicking its attachment in the chatter.
+- Delete-drawing action in the picker (manager capability).
 - Real-time multi-user collaboration (requires a collaboration backend).
-- Optional embedding of drawings into arbitrary records via smart buttons.
