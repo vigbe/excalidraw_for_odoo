@@ -6,11 +6,18 @@
 
 Persistence model: an ``ir.attachment`` pair per drawing (editable scene JSON
 ``<name>.excalidraw`` + PNG render ``<name>.png``) upserted on the host record
-by exact ``(res_model, res_id, res_field=False, name)``.
+by exact ``(res_model, res_id, res_field, name)``. The scene row carries the
+internal ``excalidraw_scene`` marker (hidden from chatter); the PNG keeps
+``res_field = False`` (visible).
 
 Security model (FR-ACCESS-1): the controller is the source of truth and checks
 group membership → generic chatter-capability of the model → record existence
 → write access, all before any validation side effect or attachment write.
+Odoo 19 hard-denies non-system ORM access to ``res_field``-marker rows and
+record rules cannot lift it (probe 2026-09-04, CR-1 Option A), so scene-row
+attachment operations run via ``sudo()`` strictly AFTER those real-user
+gates — the gates, not attachment record rules, are the security boundary
+for scene rows (DR-ATT-1 as amended).
 """
 
 import base64
@@ -29,6 +36,11 @@ _UNSAFE_FILENAME_CHARS = re.compile(r"[\/\\:*?\"<>|]")
 _MAX_NAME_LENGTH = 100
 
 _GROUP_USER = "excalidraw_for_odoo.group_excalidraw_user"
+
+# Internal marker of the scene half of the pair (DR-ATT-1 as amended by
+# CR-1/S12): chatter attachment domains exclude res_field != False, so the
+# machine artifact stays hidden; the PNG half stays res_field=False.
+SCENE_RES_FIELD = "excalidraw_scene"
 
 
 class ExcalidrawChatterController(http.Controller):
@@ -118,16 +130,26 @@ class ExcalidrawChatterController(http.Controller):
         )
         return _("Drawing %s") % timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
-    def _upsert_attachment(self, name, mimetype, raw, res_model, res_id):
+    def _upsert_attachment(
+        self, name, mimetype, raw, res_model, res_id, res_field, sudo_ops
+    ):
         """Upsert one attachment of the pair by exact field identity
         (FR-PAIR-1, DR-ATT-1): write in place when a row exists, create
         otherwise. No unique constraint is needed — this search is the
-        mechanism."""
-        attachment = request.env["ir.attachment"].search(
+        mechanism. Scene rows (marker, ``sudo_ops=True``) are operated
+        via sudo() — plain users cannot access marker rows (platform
+        hard-deny; the route's real-user gates ran before this call).
+        PNG rows keep res_field=False and use normal user operations."""
+        env = (
+            request.env["ir.attachment"].sudo()
+            if sudo_ops
+            else request.env["ir.attachment"]
+        )
+        attachment = env.search(
             [
                 ("res_model", "=", res_model),
                 ("res_id", "=", res_id),
-                ("res_field", "=", False),
+                ("res_field", "=", res_field),
                 ("name", "=", name),
             ],
             limit=1,
@@ -135,14 +157,14 @@ class ExcalidrawChatterController(http.Controller):
         if attachment:
             attachment.write({"raw": raw})
             return attachment
-        return request.env["ir.attachment"].create(
+        return env.create(
             {
                 "name": name,
                 "mimetype": mimetype,
                 "raw": raw,
                 "res_model": res_model,
                 "res_id": res_id,
-                "res_field": False,
+                "res_field": res_field,
                 "public": False,
                 "url": False,
             }
@@ -183,13 +205,16 @@ class ExcalidrawChatterController(http.Controller):
             png_bytes = self._decode_png(png)
             # 7. Name handling with server-side timestamp fallback.
             drawing_name = self._sanitize_name(name)
-            # 8. Upsert the pair (FR-PAIR-1, DR-ATT-1).
+            # 8. Upsert the pair (FR-PAIR-1, DR-ATT-1): scene via sudo
+            #    (marker row), PNG as the current user (visible row).
             scene_attachment = self._upsert_attachment(
                 f"{drawing_name}.excalidraw",
                 "application/json",
                 scene_text.encode("utf-8"),
                 res_model,
                 res_id_int,
+                SCENE_RES_FIELD,
+                sudo_ops=True,
             )
             png_attachment = None
             if png_bytes is not None:
@@ -199,6 +224,8 @@ class ExcalidrawChatterController(http.Controller):
                     png_bytes,
                     res_model,
                     res_id_int,
+                    False,
+                    sudo_ops=False,
                 )
             # 9. Success.
             result.update(
@@ -241,17 +268,34 @@ class ExcalidrawChatterController(http.Controller):
         try:
             self._check_group()
             attachment_id_int = self._to_int(attachment_id)
-            attachment = request.env["ir.attachment"].browse(attachment_id_int).exists()
+            # sudo browse/read: marker rows are hard-denied for plain
+            # users (CR-1 Option A platform constraint). The real-user
+            # gates below — not attachment record rules — govern access.
+            attachment = (
+                request.env["ir.attachment"]
+                .sudo()
+                .browse(attachment_id_int)
+                .exists()
+            )
             if not attachment:
-                raise MissingError(_("The record does not exist or has been deleted."))
-            # ORM read: ir.attachment access rules govern (no bypass).
-            data = attachment.read(["name", "res_model", "datas"])[0]
+                raise MissingError(
+                    _("The record does not exist or has been deleted.")
+                )
+            data = attachment.read(["name", "res_model", "res_id", "datas"])[0]
             if not str(data["name"]).endswith(".excalidraw"):
                 raise ValueError(
                     _("The attachment is not an Excalidraw scene document.")
                 )
             # Generic model gate, identical message to the save route.
-            self._chatter_model(data["res_model"])
+            model = self._chatter_model(data["res_model"])
+            # Read gate on the host record, as the requesting user.
+            record = model.browse(data["res_id"]).exists()
+            if not record:
+                raise MissingError(
+                    _("The record does not exist or has been deleted.")
+                )
+            record.check_access_rights("read")
+            record.check_access_rule("read")
             result = {
                 "scene": base64.b64decode(data["datas"]).decode(
                     "utf-8", errors="replace"
@@ -267,8 +311,80 @@ class ExcalidrawChatterController(http.Controller):
             _logger.warning("excalidraw_for_odoo: scene refused: %s", str(ex))
             result = {"error": str(ex)}
         except Exception:
-            _logger.exception("excalidraw_for_odoo: unexpected error fetching scene")
+            _logger.exception(
+                "excalidraw_for_odoo: unexpected error fetching scene"
+            )
             result = {
-                "error": _("Unexpected error fetching the drawing. Please try again.")
+                "error": _(
+                    "Unexpected error fetching the drawing. Please try again."
+                )
+            }
+        return result
+
+    # ------------------------------------------------------------------
+    # IR-ROUTE-3 — list scene rows for the picker
+    # ------------------------------------------------------------------
+
+    @http.route(
+        "/excalidraw/chatter/list",
+        auth="user",
+        methods=["POST"],
+        type="jsonrpc",
+    )
+    def excalidraw_chatter_list(self, res_model=None, res_id=None):
+        """List the record's scene rows (id/name/write_date, newest first)."""
+        result = {"ok": False, "drawings": []}
+        try:
+            self._check_group()
+            model = self._chatter_model(res_model)
+            res_id_int = self._to_int(res_id)
+            record = model.browse(res_id_int).exists()
+            if not record:
+                raise MissingError(
+                    _("The record does not exist or has been deleted.")
+                )
+            # Read gate on the host record, as the requesting user.
+            record.check_access_rights("read")
+            record.check_access_rule("read")
+            # sudo search (marker rows are invisible to plain users);
+            # "=ilike %.excalidraw" never matches the PNG twins, so the
+            # listing is scene-only (half-pair tolerance by construction).
+            rows = request.env["ir.attachment"].sudo().search_read(
+                [
+                    ("res_model", "=", res_model),
+                    ("res_id", "=", res_id_int),
+                    ("res_field", "=", SCENE_RES_FIELD),
+                    ("name", "=ilike", "%.excalidraw"),
+                ],
+                ["name", "write_date"],
+                order="write_date desc",
+            )
+            result = {
+                "ok": True,
+                "drawings": [
+                    {
+                        "id": row["id"],
+                        "name": row["name"],
+                        "write_date": row["write_date"],
+                    }
+                    for row in rows
+                ],
+            }
+            _logger.info(
+                "excalidraw_for_odoo: listed %s scene rows on %s#%s by %s",
+                len(rows),
+                res_model,
+                res_id_int,
+                request.env.user.login,
+            )
+        except (ValueError, AccessError, ValidationError, MissingError) as ex:
+            _logger.warning("excalidraw_for_odoo: list refused: %s", str(ex))
+            result = {"error": str(ex)}
+        except Exception:
+            _logger.exception("excalidraw_for_odoo: unexpected error listing")
+            result = {
+                "error": _(
+                    "Unexpected error fetching the drawing. Please try again."
+                )
             }
         return result

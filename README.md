@@ -27,18 +27,29 @@ chatter-capable record (partners, tasks, leads, …).
 
 ## Storage model
 
-Each drawing is a **pair of `ir.attachment` records** on the host record
-(`res_model` / `res_id`, `res_field = False`):
+Each drawing is **two `ir.attachment` records** on the host record
+(`res_model` / `res_id`):
 
 - `<name>.excalidraw` — the scene JSON (`application/json`), the editable
   source of truth, round-trip compatible with `.excalidraw` files (import /
-  export from the editor's own menu).
-- `<name>.png` — a PNG render (`image/png`, exported at 2× scale) so the
-  drawing is visible in the chatter and anywhere attachments are shown.
+  export from the editor's own menu). **Internal:** stored with the
+  `res_field = 'excalidraw_scene'` marker, which hides it from the chatter
+  attachment list (Odoo treats field-marked attachments as internal). It is
+  listed and read only through this module's gated routes, never directly.
+- `<name>.png` (`res_field = False`) — a PNG render (`image/png`, exported at
+  2× scale) so the drawing is visible in the chatter and anywhere attachments
+  are shown.
 
 Deleting either attachment is tolerated: the missing twin is regenerated on
 the next changed save. Only a `.excalidraw` attachment can be reopened for
 editing; a PNG alone is just the last render.
+
+**Removing a drawing:** deleting attachments from the chatter removes the
+PNG (the visible half) — the internal scene row persists, so the drawing
+stays reopenable from the Excalidraw picker until a dedicated delete tool
+ships (documented v1 trade-off). To fully remove a drawing today: delete the
+PNG from the chatter, and the scene row manually as an admin (Developer
+Tools → Attachments, filtered on `res_field = excalidraw_scene`).
 
 **Concurrency:** concurrent editors of the same drawing are
 **last-write-wins** — the last save overwrites both the scene and the PNG.
@@ -46,7 +57,7 @@ There is no locking or merge (by design, BR-CONC-1).
 
 ## Security
 
-- *Excalidraw / User* — gates the chatter button and both JSON-RPC routes;
+- *Excalidraw / User* — gates the chatter button and all JSON-RPC routes;
   members can create and edit drawings **only on records they can write**
   (the server re-checks access on every request; the button's client-side
   visibility check is a UX nicety, not the enforcement).
@@ -96,10 +107,10 @@ first** if the old drawings matter.
 - The chatter button is an OWL patch of `mail.Chatter` (injected after the
   attach-files button); the picker and the editor are fullscreen OWL dialogs
   (`static/src/js/excalidraw_dialogs.js`).
-- Two JSON-RPC controller routes (`/excalidraw/chatter/save` and
-  `/excalidraw/chatter/scene`) enforce, in order: group gate →
-  chatter-capable-model gate → record-existence gate → write/read access —
-  before anything is stored or returned.
+- Three JSON-RPC controller routes (`/excalidraw/chatter/save`,
+  `/excalidraw/chatter/scene` and `/excalidraw/chatter/list`) enforce, in
+  order: group gate → chatter-capable-model gate → record-existence gate →
+  write/read access — before anything is stored or returned.
 
 Rebuilding the vendor bundle:
 

@@ -14,17 +14,28 @@ Host model notes (verified against this build):
   write-denial path uses ``project.task`` (model ACL: read=t / write=f for
   ``base.group_user``).
 - The scene read-denial path uses ``crm.lead`` (no ACL at all for plain
-  internal users → host read denied through the attachment ORM read).
+  internal users → host read denied through the route's record-read gate).
+- CR-1/S12 (Option A): the scene row carries the internal
+``res_field='excalidraw_scene'`` marker — hidden from chatter. Odoo 19
+hard-denies non-system ORM access to marked rows (record rules cannot lift
+it), so tests read them via ``sudo()``; PNG rows keep ``res_field=False``
+and stay normally visible. The picker lists scenes through the gated
+IR-ROUTE-3, never via frontend search_read.
 """
 
 import base64
 import json
+from datetime import timedelta
 
-from odoo import Command
+from odoo import Command, fields
+from odoo.exceptions import AccessError
 from odoo.tests import HttpCase, TransactionCase, tagged
 
 SAVE_URL = "/excalidraw/chatter/save"
 SCENE_URL = "/excalidraw/chatter/scene"
+LIST_URL = "/excalidraw/chatter/list"
+
+SCENE_RES_FIELD = "excalidraw_scene"
 
 # Valid scene documents (DR-SCENE-1 envelope; server-side contract is the
 # looser "JSON dict containing an elements key" per BR-SCENE-1).
@@ -130,8 +141,10 @@ class TestExcalidrawChatterController(HttpCase):
             )
 
         # Read-denial host: plain internal users have no crm.lead ACL at all,
-        # so the ORM read of a lead-linked attachment raises AccessError.
+        # so the routes' host-record read gate raises AccessError. The fixture
+        # row is marked like a real scene row (S12).
         cls.read_denied_attachment_id = None
+        cls.deny_lead = None
         if "crm.lead" in cls.env:
             lead = cls.env["crm.lead"].create(
                 {"name": "Exc Read Denial", "type": "lead"}
@@ -143,11 +156,12 @@ class TestExcalidrawChatterController(HttpCase):
                     "raw": SCENE_V1.encode("utf-8"),
                     "res_model": "crm.lead",
                     "res_id": lead.id,
-                    "res_field": False,
+                    "res_field": SCENE_RES_FIELD,
                     "public": False,
                     "url": False,
                 }
             )
+            cls.deny_lead = lead
             cls.read_denied_attachment_id = read_denied.id
 
         # A non-.excalidraw attachment on the happy-path host (wrong-type
@@ -187,15 +201,48 @@ class TestExcalidrawChatterController(HttpCase):
             SCENE_URL, {"attachment_id": attachment_id}, login, password
         )
 
+    def _list(self, login, password, res_model, res_id):
+        return self._json_rpc(
+            LIST_URL, {"res_model": res_model, "res_id": res_id}, login, password
+        )
+
     def _new_host(self, name="Fresh Host"):
         return self.env["res.partner"].create({"name": name})
 
     def _host_attachments(self, host):
+        """Chatter-visible rows on the host (res_field = False domain —
+        exactly what the chatter attachment list shows)."""
         return self.env["ir.attachment"].search(
             [
                 ("res_model", "=", host._name),
                 ("res_id", "=", host.id),
                 ("res_field", "=", False),
+            ]
+        )
+
+    def _scene_rows_sudo(self, host, name=None):
+        """Internal marker rows on the host, read via sudo (plain users
+        cannot access res_field-marker rows — S12 platform constraint)."""
+        domain = [
+            ("res_model", "=", host._name),
+            ("res_id", "=", host.id),
+            ("res_field", "=", SCENE_RES_FIELD),
+        ]
+        if name:
+            domain.append(("name", "=", name))
+        return self.env["ir.attachment"].sudo().search(domain)
+
+    def _all_rows_sudo(self, host):
+        """Every drawing row on the host regardless of marker (sudo).
+
+        Odoo 19 filters ``res_field`` implicitly in attachment search even
+        for sudo when the domain does not mention it (probe 2026-09-04), so
+        both halves are requested explicitly."""
+        return self.env["ir.attachment"].sudo().search(
+            [
+                ("res_model", "=", host._name),
+                ("res_id", "=", host.id),
+                ("res_field", "in", [False, SCENE_RES_FIELD]),
             ]
         )
 
@@ -219,24 +266,35 @@ class TestExcalidrawChatterController(HttpCase):
         self.assertTrue(result.get("ok"))
         self.assertTrue(result.get("scene_id"))
         self.assertTrue(result.get("png_id"))
-        attachments = self._host_attachments(host)
-        self.assertEqual(len(attachments), 2)
-        scene = attachments.filtered(lambda a: a.name == "Cover.excalidraw")
-        png = attachments.filtered(lambda a: a.name == "Cover.png")
+        # The scene row carries the internal marker (DR-ATT-1 as amended).
+        scene = self._scene_rows_sudo(host, "Cover.excalidraw")
         self.assertEqual(len(scene), 1)
+        # The PNG keeps res_field=False: the only chatter-visible row.
+        png = self._host_attachments(host)
         self.assertEqual(len(png), 1)
+        self.assertEqual(png.name, "Cover.png")
         self.assertEqual(result["scene_id"], scene.id)
         self.assertEqual(result["png_id"], png.id)
         self.assertEqual(scene.mimetype, "application/json")
         self.assertEqual(png.mimetype, "image/png")
-        for att in attachments:
+        self.assertEqual(scene.res_field, "excalidraw_scene")
+        self.assertFalse(png.res_field)
+        for att in (scene, png):
             self.assertEqual(att.res_model, "res.partner")
             self.assertEqual(att.res_id, host.id)
-            self.assertFalse(att.res_field)
             self.assertFalse(att.public)
             self.assertFalse(att.url)
         self.assertEqual(scene.raw, SCENE_V1.encode("utf-8"))
         self.assertEqual(png.raw, base64.b64decode(PNG_A_B64))
+        # Plain-user chatter-visible domain: PNG in, hidden scene out.
+        plain_visible = self.env["ir.attachment"].with_user(self.plain_user).search(
+            [
+                ("res_model", "=", "res.partner"),
+                ("res_id", "=", host.id),
+                ("res_field", "=", False),
+            ]
+        )
+        self.assertEqual(plain_visible.ids, [png.id])
 
     def test_save_upsert_no_duplicate(self):
         """Re-saving the same drawing updates in place, never duplicates."""
@@ -251,7 +309,7 @@ class TestExcalidrawChatterController(HttpCase):
             png=PNG_A_B64,
         )
         self.assertNotIn("error", first)
-        scene_row = self.env["ir.attachment"].browse(first["scene_id"])
+        scene_row = self.env["ir.attachment"].sudo().browse(first["scene_id"])
         first_write_date = scene_row.write_date
         second = self._save(
             "exc_full",
@@ -265,8 +323,9 @@ class TestExcalidrawChatterController(HttpCase):
         self.assertNotIn("error", second)
         self.assertEqual(second["scene_id"], first["scene_id"])
         self.assertEqual(second["png_id"], first["png_id"])
-        self.assertEqual(len(self._host_attachments(host)), 2)
-        scene_row = self.env["ir.attachment"].browse(first["scene_id"])
+        self.assertEqual(len(self._host_attachments(host)), 1)  # PNG only
+        self.assertEqual(len(self._all_rows_sudo(host)), 2)  # + hidden scene
+        scene_row = self.env["ir.attachment"].sudo().browse(first["scene_id"])
         self.assertEqual(scene_row.raw, SCENE_V2.encode("utf-8"))
         self.assertGreaterEqual(scene_row.write_date, first_write_date)
 
@@ -293,8 +352,8 @@ class TestExcalidrawChatterController(HttpCase):
         )
         self.assertNotIn("error", first)
         self.assertNotIn("error", second)
-        self.assertEqual(len(self._host_attachments(host)), 2)
-        scene_row = self.env["ir.attachment"].browse(second["scene_id"])
+        self.assertEqual(len(self._all_rows_sudo(host)), 2)
+        scene_row = self.env["ir.attachment"].sudo().browse(second["scene_id"])
         self.assertEqual(scene_row.raw, SCENE_V2.encode("utf-8"))
 
     def test_save_png_twin_recreated(self):
@@ -310,7 +369,9 @@ class TestExcalidrawChatterController(HttpCase):
             png=PNG_A_B64,
         )
         self.env["ir.attachment"].browse(first["png_id"]).unlink()
-        self.assertEqual(len(self._host_attachments(host)), 1)
+        # PNG gone from the chatter; the hidden scene row survives.
+        self.assertEqual(len(self._host_attachments(host)), 0)
+        self.assertEqual(len(self._scene_rows_sudo(host, "Twin.excalidraw")), 1)
         second = self._save(
             "exc_full",
             "exc_full",
@@ -322,11 +383,11 @@ class TestExcalidrawChatterController(HttpCase):
         )
         self.assertNotIn("error", second)
         self.assertEqual(second["scene_id"], first["scene_id"])
-        attachments = self._host_attachments(host)
-        self.assertEqual(len(attachments), 2)
-        png = attachments.filtered(lambda a: a.name == "Twin.png")
+        png = self._host_attachments(host)
         self.assertEqual(len(png), 1)
+        self.assertEqual(png.name, "Twin.png")
         self.assertEqual(png.raw, base64.b64decode(PNG_B_B64))
+        self.assertEqual(len(self._all_rows_sudo(host)), 2)
 
     # ------------------------------------------------------------------
     # BR-SCENE-1 / robustness / IR-ROUTE-1 param contract
@@ -346,7 +407,7 @@ class TestExcalidrawChatterController(HttpCase):
                 png=None,
             )
             self.assertIn("error", result, scene)
-            self.assertEqual(len(self._host_attachments(host)), 0)
+            self.assertEqual(len(self._all_rows_sudo(host)), 0)
 
     def test_save_invalid_png_rejected(self):
         """Non-base64 PNG payloads are rejected with zero attachment rows."""
@@ -361,7 +422,7 @@ class TestExcalidrawChatterController(HttpCase):
             png="@@not-base64@@",
         )
         self.assertIn("error", result)
-        self.assertEqual(len(self._host_attachments(host)), 0)
+        self.assertEqual(len(self._all_rows_sudo(host)), 0)
 
     def test_save_empty_elements_scene_only(self):
         """An element-less scene persists the scene file only (BR-EMPTY-1)."""
@@ -378,9 +439,10 @@ class TestExcalidrawChatterController(HttpCase):
         self.assertNotIn("error", result)
         self.assertTrue(result.get("ok"))
         self.assertIsNone(result.get("png_id"))
-        attachments = self._host_attachments(host)
-        self.assertEqual(len(attachments), 1)
-        self.assertEqual(attachments.name, "Blank.excalidraw")
+        scene = self._scene_rows_sudo(host, "Blank.excalidraw")
+        self.assertEqual(len(scene), 1)
+        self.assertEqual(scene.res_field, "excalidraw_scene")
+        self.assertEqual(len(self._host_attachments(host)), 0)  # hidden
 
     def test_save_missing_params_refused(self):
         """Missing or unresolvable params are refused with zero writes."""
@@ -400,7 +462,7 @@ class TestExcalidrawChatterController(HttpCase):
         for params in variants:
             result = self._save("exc_full", "exc_full", **params)
             self.assertIn("error", result, params)
-        self.assertEqual(len(self._host_attachments(host)), 0)
+        self.assertEqual(len(self._all_rows_sudo(host)), 0)
 
     def test_save_empty_name_fallback(self):
         """An empty name falls back to a server timestamp name (FR-NAME-1)."""
@@ -415,10 +477,11 @@ class TestExcalidrawChatterController(HttpCase):
             png=PNG_A_B64,
         )
         self.assertNotIn("error", result)
-        attachments = self._host_attachments(host)
-        self.assertEqual(len(attachments), 2)
-        scene = attachments.filtered(lambda a: a.name.endswith(".excalidraw"))
-        png = attachments.filtered(lambda a: a.name.endswith(".png"))
+        self.assertEqual(len(self._all_rows_sudo(host)), 2)
+        scene = self._scene_rows_sudo(host).filtered(
+            lambda a: a.name.endswith(".excalidraw")
+        )
+        png = self._host_attachments(host)
         self.assertEqual(len(scene), 1)
         self.assertEqual(len(png), 1)
         basename = scene.name[: -len(".excalidraw")]
@@ -442,7 +505,7 @@ class TestExcalidrawChatterController(HttpCase):
             png=None,
         )
         self.assertIn("error", result)
-        self.assertEqual(len(self._host_attachments(host)), 0)
+        self.assertEqual(len(self._all_rows_sudo(host)), 0)
 
     def test_save_no_write_denied(self):
         """A group user without model write access is refused."""
@@ -459,7 +522,7 @@ class TestExcalidrawChatterController(HttpCase):
             png=None,
         )
         self.assertIn("error", result)
-        self.assertEqual(len(self._host_attachments(self.deny_task)), 0)
+        self.assertEqual(len(self._all_rows_sudo(self.deny_task)), 0)
 
     def test_save_unknown_or_nonchatter_model_generic(self):
         """Unknown and chatter-less models share one generic error message."""
@@ -485,7 +548,7 @@ class TestExcalidrawChatterController(HttpCase):
         self.assertIn("error", unknown)
         self.assertIn("error", nonchatter)
         self.assertEqual(unknown["error"], nonchatter["error"])
-        self.assertEqual(len(self._host_attachments(host)), 0)
+        self.assertEqual(len(self._all_rows_sudo(host)), 0)
 
     # ------------------------------------------------------------------
     # IR-ROUTE-2 (scene fetch)
@@ -506,6 +569,11 @@ class TestExcalidrawChatterController(HttpCase):
         fetched = self._scene("exc_full", "exc_full", saved["scene_id"])
         self.assertNotIn("error", fetched)
         self.assertEqual(fetched.get("scene"), SCENE_V1)
+        # A plain (non-system) group member with host read access also gets
+        # it: the route sudo-reads the marked row AFTER its real-user gates.
+        plain = self._scene("exc_plain", "exc_plain", saved["scene_id"])
+        self.assertNotIn("error", plain)
+        self.assertEqual(plain.get("scene"), SCENE_V1)
         # A non-.excalidraw attachment id is refused.
         wrong = self._scene("exc_full", "exc_full", self.png_only_attachment.id)
         self.assertIn("error", wrong)
@@ -533,6 +601,88 @@ class TestExcalidrawChatterController(HttpCase):
             self.assertNotIn("scene", denied)
 
     # ------------------------------------------------------------------
+    # IR-ROUTE-3 (picker listing)
+    # ------------------------------------------------------------------
+
+    def test_list_route_rows(self):
+        """A plain group member lists scene rows newest first (IR-ROUTE-3)."""
+        host = self._new_host("List Host")
+        first = self._save(
+            "exc_full",
+            "exc_full",
+            res_model="res.partner",
+            res_id=host.id,
+            name="One",
+            scene=SCENE_V1,
+            png=PNG_A_B64,
+        )
+        second = self._save(
+            "exc_full",
+            "exc_full",
+            res_model="res.partner",
+            res_id=host.id,
+            name="Two",
+            scene=SCENE_V2,
+            png=PNG_A_B64,
+        )
+        listed = self._list("exc_plain", "exc_plain", "res.partner", host.id)
+        self.assertNotIn("error", listed)
+        self.assertTrue(listed.get("ok"))
+        drawings = listed.get("drawings")
+        self.assertEqual(len(drawings), 2)
+        ids = {d["id"] for d in drawings}
+        self.assertEqual(ids, {first["scene_id"], second["scene_id"]})
+        # Scene-only listing: PNG twins are never returned.
+        self.assertNotIn(first["png_id"], ids)
+        self.assertNotIn(second["png_id"], ids)
+        self.assertEqual(
+            {d["name"] for d in drawings}, {"One.excalidraw", "Two.excalidraw"}
+        )
+        for drawing in drawings:
+            self.assertTrue(drawing["write_date"])
+        # Newest first: force distinct write_dates (second-precision
+        # timestamps can tie) so the ordering assertion is deterministic.
+        self.env["ir.attachment"].sudo().browse(first["scene_id"]).write(
+            {"write_date": fields.Datetime.now() - timedelta(days=1)}
+        )
+        ordered = self._list("exc_plain", "exc_plain", "res.partner", host.id)
+        self.assertEqual(
+            [d["id"] for d in ordered["drawings"]],
+            [second["scene_id"], first["scene_id"]],
+        )
+        # Half-pair tolerance: deleting the PNG does not unlist the scene.
+        self.env["ir.attachment"].browse(second["png_id"]).unlink()
+        after = self._list("exc_plain", "exc_plain", "res.partner", host.id)
+        self.assertEqual(len(after["drawings"]), 2)
+
+    def test_list_route_denied(self):
+        """Non-members and read-denied users get the error envelope."""
+        host = self._new_host("ListDenied Host")
+        self._save(
+            "exc_full",
+            "exc_full",
+            res_model="res.partner",
+            res_id=host.id,
+            name="Denied List",
+            scene=SCENE_V1,
+            png=None,
+        )
+        outsider = self._list("exc_outsider", "exc_outsider", "res.partner", host.id)
+        self.assertIn("error", outsider)
+        self.assertNotIn("drawings", outsider)
+        # Read-denied host: plain internal users have no crm.lead ACL.
+        if self.deny_lead and self.read_denied_attachment_id:
+            denied = self._list(
+                "exc_plain", "exc_plain", "crm.lead", self.deny_lead.id
+            )
+            self.assertIn("error", denied)
+            self.assertNotIn("drawings", denied)
+        # Generic model gate, same message family as the save route.
+        unknown = self._list("exc_full", "exc_full", "no.such.model", 1)
+        self.assertIn("error", unknown)
+        self.assertNotIn("drawings", unknown)
+
+    # ------------------------------------------------------------------
     # FR-REMOVE-1 (intentionally RED until the Slice 3 removal lands)
     # ------------------------------------------------------------------
 
@@ -558,7 +708,8 @@ class TestExcalidrawChatterController(HttpCase):
 
 @tagged("post_install", "-at_install")
 class TestExcalidrawAttachmentVisibility(TransactionCase):
-    """Pure-ORM visibility of the stored pair (FR-ACCESS-1 reader path)."""
+    """Pure-ORM visibility of the stored pair (FR-ACCESS-1 reader path,
+    repointed for S12: PNG visible, scene row internal/hidden)."""
 
     @classmethod
     def setUpClass(cls):
@@ -575,7 +726,9 @@ class TestExcalidrawAttachmentVisibility(TransactionCase):
         cls.host = cls.env["res.partner"].create({"name": "Reader Host"})
 
     def test_reader_sees_png(self):
-        """A read-only user reads the pair through the ORM (A4, FR-ACCESS-1)."""
+        """The PNG stays ORM-readable for a plain reader (A4); the scene row
+        is a hidden marker — absent from the visible domain and hard-denied
+        on direct ORM read (S12 platform constraint, probe 2026-09-04)."""
         scene = self.env["ir.attachment"].create(
             {
                 "name": "Reader.excalidraw",
@@ -583,7 +736,7 @@ class TestExcalidrawAttachmentVisibility(TransactionCase):
                 "raw": SCENE_V1.encode("utf-8"),
                 "res_model": "res.partner",
                 "res_id": self.host.id,
-                "res_field": False,
+                "res_field": SCENE_RES_FIELD,
                 "public": False,
                 "url": False,
             }
@@ -600,8 +753,22 @@ class TestExcalidrawAttachmentVisibility(TransactionCase):
                 "url": False,
             }
         )
-        for att in (scene, png):
-            read = att.with_user(self.reader).read(["name", "datas"])
-            self.assertEqual(read[0]["name"], att.name)
-            self.assertEqual(read[0]["datas"], att.datas)
-            self.assertFalse(att.public)
+        # Visible half: a read-only user reads the PNG through the ORM.
+        read = png.with_user(self.reader).read(["name", "datas"])
+        self.assertEqual(read[0]["name"], "Reader.png")
+        self.assertEqual(read[0]["datas"], png.datas)
+        self.assertFalse(png.public)
+        # Hidden half: the scene row is excluded from the reader's visible
+        # domain (what the chatter attachment list queries)…
+        visible = self.env["ir.attachment"].with_user(self.reader).search(
+            [
+                ("res_model", "=", "res.partner"),
+                ("res_id", "=", self.host.id),
+                ("res_field", "=", False),
+            ]
+        )
+        self.assertEqual(visible.ids, [png.id])
+        # …and direct ORM access to the marker row is platform-denied — only
+        # the gated routes (which sudo-read after their checks) reach it.
+        with self.assertRaises(AccessError):
+            scene.with_user(self.reader).read(["name", "datas"])

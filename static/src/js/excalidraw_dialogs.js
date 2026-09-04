@@ -114,7 +114,6 @@ export class ExcalidrawPickerDialog extends Component {
         this.data = this.env.dialogData;
         this.notification = useService("notification");
         this.dialog = useService("dialog");
-        this.orm = useService("orm");
 
         this.dialogTitle = _t("Excalidraw drawings");
         this.labels = {
@@ -152,22 +151,28 @@ export class ExcalidrawPickerDialog extends Component {
     async loadAttachments() {
         this.state.loading = true;
         try {
-            // "=ilike %.excalidraw" lists names *ending* in .excalidraw —
-            // the PNG twins (X.png) never match, so half-pair tolerance is
-            // built into the listing (FR-PICKER-1, R10).
-            this.state.attachments = await this.orm.searchRead(
-                "ir.attachment",
-                [
-                    ["res_model", "=", this.props.resModel],
-                    ["res_id", "=", this.props.resId],
-                    ["res_field", "=", false],
-                    ["name", "=ilike", "%.excalidraw"],
-                ],
-                ["name", "write_date"],
-                { order: "write_date desc" }, // newest first (spec SHOULD)
-            );
+            // IR-ROUTE-3 (CR-1 Option A): scene rows carry the internal
+            // res_field marker and are invisible to plain search_read —
+            // the gated controller route lists them (newest first,
+            // PNG twins excluded, half-pair tolerant).
+            const result = await rpc("/excalidraw/chatter/list", {
+                res_model: this.props.resModel,
+                res_id: this.props.resId,
+            });
+            if (result.error) {
+                // Error envelope: treat as an empty list — the picker
+                // stays functional.
+                console.error(
+                    "excalidraw_for_odoo: could not list drawings",
+                    result.error,
+                );
+                this.state.attachments = [];
+            } else {
+                this.state.attachments = result.drawings || [];
+            }
         } catch (error) {
-            // ACL edge: treat as an empty list — the picker stays functional.
+            // Route failure: treat as an empty list — the picker stays
+            // functional.
             console.error(
                 "excalidraw_for_odoo: could not list drawings",
                 error,
