@@ -40,10 +40,17 @@ Roadmap (not included): real-time multi-user collaboration.
     ],
     "assets": {
         "web.assets_backend": [
+            # Legacy standalone-app assets (dropped in 19.0.2.0.0 — S7/S8):
             "excalidraw_for_odoo/static/src/scss/excalidraw.scss",
             "excalidraw_for_odoo/static/src/js/excalidraw_loader.js",
             "excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js",
             "excalidraw_for_odoo/static/src/xml/excalidraw_canvas_field.xml",
+            # Chatter tool (design §3; static/lib/** stays out of the
+            # bundles — dynamic import, IR-ASSET-1):
+            "excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js",
+            "excalidraw_for_odoo/static/src/js/chatter_patch.js",
+            "excalidraw_for_odoo/static/src/xml/chatter_patch.xml",
+            "excalidraw_for_odoo/static/src/scss/excalidraw_chatter.scss",
         ],
     },
     "installable": True,
