@@ -238,12 +238,16 @@ class TestExcalidrawChatterController(HttpCase):
         Odoo 19 filters ``res_field`` implicitly in attachment search even
         for sudo when the domain does not mention it (probe 2026-09-04), so
         both halves are requested explicitly."""
-        return self.env["ir.attachment"].sudo().search(
-            [
-                ("res_model", "=", host._name),
-                ("res_id", "=", host.id),
-                ("res_field", "in", [False, SCENE_RES_FIELD]),
-            ]
+        return (
+            self.env["ir.attachment"]
+            .sudo()
+            .search(
+                [
+                    ("res_model", "=", host._name),
+                    ("res_id", "=", host.id),
+                    ("res_field", "in", [False, SCENE_RES_FIELD]),
+                ]
+            )
         )
 
     # ------------------------------------------------------------------
@@ -287,12 +291,16 @@ class TestExcalidrawChatterController(HttpCase):
         self.assertEqual(scene.raw, SCENE_V1.encode("utf-8"))
         self.assertEqual(png.raw, base64.b64decode(PNG_A_B64))
         # Plain-user chatter-visible domain: PNG in, hidden scene out.
-        plain_visible = self.env["ir.attachment"].with_user(self.plain_user).search(
-            [
-                ("res_model", "=", "res.partner"),
-                ("res_id", "=", host.id),
-                ("res_field", "=", False),
-            ]
+        plain_visible = (
+            self.env["ir.attachment"]
+            .with_user(self.plain_user)
+            .search(
+                [
+                    ("res_model", "=", "res.partner"),
+                    ("res_id", "=", host.id),
+                    ("res_field", "=", False),
+                ]
+            )
         )
         self.assertEqual(plain_visible.ids, [png.id])
 
@@ -672,9 +680,7 @@ class TestExcalidrawChatterController(HttpCase):
         self.assertNotIn("drawings", outsider)
         # Read-denied host: plain internal users have no crm.lead ACL.
         if self.deny_lead and self.read_denied_attachment_id:
-            denied = self._list(
-                "exc_plain", "exc_plain", "crm.lead", self.deny_lead.id
-            )
+            denied = self._list("exc_plain", "exc_plain", "crm.lead", self.deny_lead.id)
             self.assertIn("error", denied)
             self.assertNotIn("drawings", denied)
         # Generic model gate, same message family as the save route.
@@ -760,12 +766,16 @@ class TestExcalidrawAttachmentVisibility(TransactionCase):
         self.assertFalse(png.public)
         # Hidden half: the scene row is excluded from the reader's visible
         # domain (what the chatter attachment list queries)…
-        visible = self.env["ir.attachment"].with_user(self.reader).search(
-            [
-                ("res_model", "=", "res.partner"),
-                ("res_id", "=", self.host.id),
-                ("res_field", "=", False),
-            ]
+        visible = (
+            self.env["ir.attachment"]
+            .with_user(self.reader)
+            .search(
+                [
+                    ("res_model", "=", "res.partner"),
+                    ("res_id", "=", self.host.id),
+                    ("res_field", "=", False),
+                ]
+            )
         )
         self.assertEqual(visible.ids, [png.id])
         # …and direct ORM access to the marker row is platform-denied — only

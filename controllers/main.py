@@ -272,15 +272,10 @@ class ExcalidrawChatterController(http.Controller):
             # users (CR-1 Option A platform constraint). The real-user
             # gates below — not attachment record rules — govern access.
             attachment = (
-                request.env["ir.attachment"]
-                .sudo()
-                .browse(attachment_id_int)
-                .exists()
+                request.env["ir.attachment"].sudo().browse(attachment_id_int).exists()
             )
             if not attachment:
-                raise MissingError(
-                    _("The record does not exist or has been deleted.")
-                )
+                raise MissingError(_("The record does not exist or has been deleted."))
             data = attachment.read(["name", "res_model", "res_id", "datas"])[0]
             if not str(data["name"]).endswith(".excalidraw"):
                 raise ValueError(
@@ -291,9 +286,7 @@ class ExcalidrawChatterController(http.Controller):
             # Read gate on the host record, as the requesting user.
             record = model.browse(data["res_id"]).exists()
             if not record:
-                raise MissingError(
-                    _("The record does not exist or has been deleted.")
-                )
+                raise MissingError(_("The record does not exist or has been deleted."))
             record.check_access_rights("read")
             record.check_access_rule("read")
             result = {
@@ -311,13 +304,9 @@ class ExcalidrawChatterController(http.Controller):
             _logger.warning("excalidraw_for_odoo: scene refused: %s", str(ex))
             result = {"error": str(ex)}
         except Exception:
-            _logger.exception(
-                "excalidraw_for_odoo: unexpected error fetching scene"
-            )
+            _logger.exception("excalidraw_for_odoo: unexpected error fetching scene")
             result = {
-                "error": _(
-                    "Unexpected error fetching the drawing. Please try again."
-                )
+                "error": _("Unexpected error fetching the drawing. Please try again.")
             }
         return result
 
@@ -340,24 +329,26 @@ class ExcalidrawChatterController(http.Controller):
             res_id_int = self._to_int(res_id)
             record = model.browse(res_id_int).exists()
             if not record:
-                raise MissingError(
-                    _("The record does not exist or has been deleted.")
-                )
+                raise MissingError(_("The record does not exist or has been deleted."))
             # Read gate on the host record, as the requesting user.
             record.check_access_rights("read")
             record.check_access_rule("read")
             # sudo search (marker rows are invisible to plain users);
             # "=ilike %.excalidraw" never matches the PNG twins, so the
             # listing is scene-only (half-pair tolerance by construction).
-            rows = request.env["ir.attachment"].sudo().search_read(
-                [
-                    ("res_model", "=", res_model),
-                    ("res_id", "=", res_id_int),
-                    ("res_field", "=", SCENE_RES_FIELD),
-                    ("name", "=ilike", "%.excalidraw"),
-                ],
-                ["name", "write_date"],
-                order="write_date desc",
+            rows = (
+                request.env["ir.attachment"]
+                .sudo()
+                .search_read(
+                    [
+                        ("res_model", "=", res_model),
+                        ("res_id", "=", res_id_int),
+                        ("res_field", "=", SCENE_RES_FIELD),
+                        ("name", "=ilike", "%.excalidraw"),
+                    ],
+                    ["name", "write_date"],
+                    order="write_date desc",
+                )
             )
             result = {
                 "ok": True,
@@ -383,8 +374,6 @@ class ExcalidrawChatterController(http.Controller):
         except Exception:
             _logger.exception("excalidraw_for_odoo: unexpected error listing")
             result = {
-                "error": _(
-                    "Unexpected error fetching the drawing. Please try again."
-                )
+                "error": _("Unexpected error fetching the drawing. Please try again.")
             }
         return result
