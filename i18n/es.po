@@ -13,63 +13,9 @@ msgstr ""
 
 #. module: excalidraw_for_odoo
 #: model:ir.module.category,name:excalidraw_for_odoo.module_category_excalidraw_for_odoo
-#: model:ir.model,name:excalidraw_for_odoo.model_excalidraw_drawing
+#: model:res.groups.privilege,name:excalidraw_for_odoo.excalidraw_for_odoo_privilege
 msgid "Excalidraw"
 msgstr "Excalidraw"
-
-#. module: excalidraw_for_odoo
-#: model:ir.model.fields,field_description:excalidraw_for_odoo.field_excalidraw_drawing__element_count
-msgid "Elements"
-msgstr "Elementos"
-
-#. module: excalidraw_for_odoo
-#: model:ir.model.fields,field_description:excalidraw_for_odoo.field_excalidraw_drawing__name
-msgid "Name"
-msgstr "Nombre"
-
-#. module: excalidraw_for_odoo
-#: model:ir.model.fields,field_description:excalidraw_for_odoo.field_excalidraw_drawing__preview_image
-msgid "Preview"
-msgstr "Vista previa"
-
-#. module: excalidraw_for_odoo
-#: model:ir.model.fields,field_description:excalidraw_for_odoo.field_excalidraw_drawing__scene_data
-msgid "Scene"
-msgstr "Escena"
-
-#. module: excalidraw_for_odoo
-msgid "Scene (JSON)"
-msgstr "Escena (JSON)"
-
-#. module: excalidraw_for_odoo
-#: model:ir.model.fields,help:excalidraw_for_odoo.field_excalidraw_drawing__scene_data
-msgid "Excalidraw scene JSON document (elements + editor state)."
-msgstr "Documento JSON de escena de Excalidraw (elementos + estado del editor)."
-
-#. module: excalidraw_for_odoo
-#: model:ir.model.fields,field_description:excalidraw_for_odoo.field_excalidraw_drawing__active
-msgid "Active"
-msgstr "Activo"
-
-#. module: excalidraw_for_odoo
-#: model:ir.model.fields,field_description:excalidraw_for_odoo.field_excalidraw_drawing__res_model
-msgid "Linked Document Model"
-msgstr "Modelo del documento vinculado"
-
-#. module: excalidraw_for_odoo
-#: model:ir.model.fields,field_description:excalidraw_for_odoo.field_excalidraw_drawing__res_id
-msgid "Linked Document ID"
-msgstr "ID del documento vinculado"
-
-#. module: excalidraw_for_odoo
-#: code:addons/excalidraw_for_odoo/models/excalidraw_drawing.py:0
-msgid "Untitled drawing"
-msgstr "Dibujo sin título"
-
-#. module: excalidraw_for_odoo
-#: code:addons/excalidraw_for_odoo/models/excalidraw_drawing.py:0
-msgid "The scene is not a valid Excalidraw document: it must be a JSON object with an 'elements' key."
-msgstr "La escena no es un documento Excalidraw válido: debe ser un objeto JSON con una clave 'elements'."
 
 #. module: excalidraw_for_odoo
 #: model:res.groups,name:excalidraw_for_odoo.group_excalidraw_user
@@ -82,64 +28,106 @@ msgid "Manager"
 msgstr "Administrador"
 
 #. module: excalidraw_for_odoo
-#: model:ir.actions.act_window,name:excalidraw_for_odoo.action_excalidraw_drawing
-#: model:ir.ui.menu,name:excalidraw_for_odoo.menu_excalidraw_root
-msgid "Excalidraw"
-msgstr "Excalidraw"
+#: model:res.groups,comment:excalidraw_for_odoo.group_excalidraw_user
+msgid "Can create and edit Excalidraw drawings."
+msgstr "Puede crear y editar dibujos de Excalidraw."
 
 #. module: excalidraw_for_odoo
-#: model:ir.ui.menu,name:excalidraw_for_odoo.menu_excalidraw_drawing
-#: model_terms:ir.ui.view,arch_db:excalidraw_for_odoo.view_excalidraw_drawing_list
-#: model_terms:ir.ui.view,arch_db:excalidraw_for_odoo.view_excalidraw_drawing_search
-msgid "Drawings"
-msgstr "Dibujos"
+#: model:res.groups,comment:excalidraw_for_odoo.group_excalidraw_manager
+msgid "Can also delete Excalidraw drawings."
+msgstr "También puede eliminar dibujos de Excalidraw."
 
 #. module: excalidraw_for_odoo
-#: model_terms:ir.ui.view,arch_db:excalidraw_for_odoo.view_excalidraw_drawing_form
-msgid "Drawing"
-msgstr "Dibujo"
+#: code:addons/excalidraw_for_odoo/controllers/main.py:0
+msgid "The record does not exist or has been deleted."
+msgstr "El registro no existe o ha sido eliminado."
 
 #. module: excalidraw_for_odoo
-#: model_terms:ir.ui.view,arch_db:excalidraw_for_odoo.view_excalidraw_drawing_form
-msgid "e.g. Sales flow sketch"
-msgstr "p. ej. Boceto de flujo de ventas"
+#: code:addons/excalidraw_for_odoo/controllers/main.py:0
+msgid "You are not allowed to use the Excalidraw drawing tool."
+msgstr "No tiene permiso para usar la herramienta de dibujo Excalidraw."
 
 #. module: excalidraw_for_odoo
-#: model_terms:ir.ui.view,arch_db:excalidraw_for_odoo.view_excalidraw_drawing_form
-msgid "Archived"
-msgstr "Archivado"
+#: code:addons/excalidraw_for_odoo/controllers/main.py:0
+msgid "Model is not found or does not support Chatter."
+msgstr "El modelo no existe o no es compatible con el chatter."
 
 #. module: excalidraw_for_odoo
-#: model_terms:ir.ui.view,arch_db:excalidraw_for_odoo.view_excalidraw_drawing_search
-msgid "Created by"
-msgstr "Creado por"
+#: code:addons/excalidraw_for_odoo/controllers/main.py:0
+msgid "Invalid PNG data."
+msgstr "Datos PNG no válidos."
 
 #. module: excalidraw_for_odoo
-#: model_terms:ir.ui.view,arch_db:excalidraw_for_odoo.view_excalidraw_drawing_search
-msgid "Last Modified"
-msgstr "Última modificación"
+#: code:addons/excalidraw_for_odoo/controllers/main.py:0
+msgid "Drawing %s"
+msgstr "Dibujo %s"
 
 #. module: excalidraw_for_odoo
-#: model_terms:ir.actions.act_window,help:excalidraw_for_odoo.action_excalidraw_drawing
-msgid "Create your first drawing"
-msgstr "Crea tu primer dibujo"
+#: code:addons/excalidraw_for_odoo/controllers/main.py:0
+msgid "The attachment is not an Excalidraw scene document."
+msgstr "El adjunto no es un documento de escena de Excalidraw."
 
 #. module: excalidraw_for_odoo
-#: model_terms:ir.actions.act_window,help:excalidraw_for_odoo.action_excalidraw_drawing
-msgid "Sketch diagrams, flows and ideas with the embedded Excalidraw whiteboard."
-msgstr "Bosqueja diagramas, flujos e ideas con la pizarra Excalidraw integrada."
+#: code:addons/excalidraw_for_odoo/static/src/js/chatter_patch.js:0
+msgid "Add or edit an Excalidraw drawing"
+msgstr "Añadir o editar un dibujo de Excalidraw"
 
 #. module: excalidraw_for_odoo
-#: code:addons/excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js:0
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
+msgid "Excalidraw drawings"
+msgstr "Dibujos de Excalidraw"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
+msgid "Loading drawings…"
+msgstr "Cargando dibujos…"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
+msgid "No drawings yet"
+msgstr "Aún no hay dibujos"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
+msgid "Open this drawing"
+msgstr "Abrir este dibujo"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
+msgid "New drawing"
+msgstr "Nuevo dibujo"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
+msgid "Close"
+msgstr "Cerrar"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
+msgid "Could not load the drawing"
+msgstr "No se pudo cargar el dibujo"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
+msgid "Excalidraw drawing"
+msgstr "Dibujo de Excalidraw"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
+msgid "Loading the Excalidraw editor…"
+msgstr "Cargando el editor de Excalidraw…"
+
+#. module: excalidraw_for_odoo
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
 msgid "Could not load the Excalidraw editor"
 msgstr "No se pudo cargar el editor de Excalidraw"
 
 #. module: excalidraw_for_odoo
-#: code:addons/excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js:0
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
 msgid "Switch to light theme"
 msgstr "Cambiar a tema claro"
 
 #. module: excalidraw_for_odoo
-#: code:addons/excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js:0
+#: code:addons/excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js:0
 msgid "Switch to dark theme"
 msgstr "Cambiar a tema oscuro"

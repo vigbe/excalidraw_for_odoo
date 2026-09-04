@@ -105,7 +105,7 @@
                             class="o_excalidraw_spinner position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
                         >
                             <span class="spinner-border me-2" role="status"/>
-                            <span>Loading the Excalidraw editor…</span>
+                            <span t-esc="loadingLabel"/>
                         </div>
                     </div>
                 </div>
@@ -119,6 +119,11 @@
          sub-template (its whole surface is that one button; the two t-call
          sites are mutually exclusive branches, so the button renders exactly
          once per chatter, next to the paperclip in both states).
+         V-3 (apply check): in the zero-attachment branch this sub-template is
+         rendered inside web.FileUploader's toggler slot, whose span carries
+         t-on-click.prevent="onSelectFileButtonClick" (opens the OS file
+         dialog). Our own click must stop propagation or it would ALSO open
+         the file picker — hence t-on-click.stop here.
          ============================================================ -->
     <t t-name="excalidraw_for_odoo.ChatterAttachFilesExtension"
        t-inherit="mail.Chatter.attachFiles"
@@ -131,7 +136,7 @@
                 t-att-class="{ 'my-2': !props.compactHeight }"
                 t-att-title="excalidrawButtonTitle"
                 t-att-aria-label="excalidrawButtonTitle"
-                t-on-click="openExcalidraw"
+                t-on-click.stop="openExcalidraw"
             >
                 <i class="fa fa-pencil" aria-hidden="true"/>
             </button>

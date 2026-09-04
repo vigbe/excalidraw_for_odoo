@@ -316,6 +316,10 @@ export class ExcalidrawEditorDialog extends Component {
         return this.props.name || _t("Excalidraw drawing");
     }
 
+    get loadingLabel() {
+        return _t("Loading the Excalidraw editor…");
+    }
+
     get effectiveTheme() {
         return this.manualTheme ?? webclientTheme();
     }
