@@ -2,7 +2,4 @@
 # are resolved inside the odoo:19 container. Same suppression pattern as the
 # sibling `drawing` module manifest.
 # pyright: reportMissingImports=false
-from . import (
-    controllers,  # noqa: F401
-    models,  # noqa: F401
-)
+from . import controllers  # noqa: F401

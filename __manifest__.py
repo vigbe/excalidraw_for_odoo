@@ -4,49 +4,51 @@
 # pyright: reportUnusedExpression=false
 {  # noqa: B018
     "name": "Excalidraw for Odoo",
-    "version": "19.0.1.0.0",
+    "version": "19.0.2.0.0",
     "category": "Productivity",
-    "summary": "Embedded Excalidraw whiteboard: draw diagrams and sketches inside Odoo",
+    "summary": "Excalidraw drawing tool in the record chatter",
     "description": """
 Excalidraw for Odoo
 ===================
 
-Embeds the Excalidraw whiteboard (https://excalidraw.com) as a first-class
-Odoo application, fully self-hosted (no CDN required).
+Embeds the Excalidraw whiteboard (https://excalidraw.com) as a chatter tool,
+fully self-hosted (no CDN required).
 
 Features
 --------
-* Dedicated "Excalidraw" app with a list of drawings and a full editor form.
-* Hand-drawn style diagrams: rectangles, arrows, text, freedraw, images...
-* Scenes are persisted as editable JSON (excalidraw.drawing.scene_data).
-* Automatic PNG preview stored as attachment for list thumbnails.
+* Pencil button in every record chatter opens a drawing picker and a
+  fullscreen editor; drawings are stored on the host record.
+* Each drawing persists as an editable .excalidraw scene JSON plus a PNG
+  render (an ir.attachment pair on the host record).
+* Autosave: 45 s inactivity debounce, 60 s max-latency guard, flush on
+  dialog close; concurrent saves are last-write-wins.
 * Built-in Excalidraw export dialog (PNG / SVG) and .excalidraw file import.
-* Permission model: Users (read/write/create) and Managers (also delete).
+* Permission model: Users (create/edit) and Managers groups gate the tool.
 * Vendored library: @excalidraw/excalidraw 0.18.1 (MIT) bundled with esbuild,
   fonts served locally via window.EXCALIDRAW_ASSET_PATH.
 
-Roadmap (not included): real-time multi-user collaboration.
-    """,
+Breaking change (19.0.2.0.0)
+---------------------------
+The standalone "Excalidraw" application and its excalidraw.drawing model were
+removed. Updating the module permanently drops the excalidraw_drawing table;
+previously stored standalone drawings are not migrated. Security groups are
+kept (they gate the new chatter tool).
+        """,
     "author": "ia-prop.com",
     "website": "https://ia-prop.com",
     "license": "LGPL-3",
     "depends": [
         "web",
+        "mail",
     ],
     "data": [
         "security/excalidraw_security.xml",
-        "security/ir.model.access.csv",
-        "views/excalidraw_drawing_views.xml",
     ],
     "assets": {
         "web.assets_backend": [
-            # Legacy standalone-app assets (dropped in 19.0.2.0.0 — S7/S8):
-            "excalidraw_for_odoo/static/src/scss/excalidraw.scss",
+            # Chatter tool (design §3). static/lib/** stays out of the
+            # bundles — loaded via dynamic import, IR-ASSET-1:
             "excalidraw_for_odoo/static/src/js/excalidraw_loader.js",
-            "excalidraw_for_odoo/static/src/js/fields/excalidraw_canvas_field.js",
-            "excalidraw_for_odoo/static/src/xml/excalidraw_canvas_field.xml",
-            # Chatter tool (design §3; static/lib/** stays out of the
-            # bundles — dynamic import, IR-ASSET-1):
             "excalidraw_for_odoo/static/src/js/excalidraw_dialogs.js",
             "excalidraw_for_odoo/static/src/js/chatter_patch.js",
             "excalidraw_for_odoo/static/src/xml/chatter_patch.xml",
@@ -54,6 +56,6 @@ Roadmap (not included): real-time multi-user collaboration.
         ],
     },
     "installable": True,
-    "application": True,
+    "application": False,
     "auto_install": False,
 }
