@@ -110,10 +110,7 @@ patch(Chatter.prototype, {
                 await this.attachmentList.load();
             } else if (typeof this.reloadAttachments === "function") {
                 await this.reloadAttachments();
-            } else if (
-                this.props &&
-                typeof this.props.onSave === "function"
-            ) {
+            } else if (this.props && typeof this.props.onSave === "function") {
                 await this.props.onSave();
             }
         } catch (error) {

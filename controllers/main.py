@@ -173,9 +173,7 @@ class ExcalidrawChatterController(http.Controller):
             res_id_int = self._to_int(res_id)
             record = model.browse(res_id_int).exists()
             if not record:
-                raise MissingError(
-                    _("The record does not exist or has been deleted.")
-                )
+                raise MissingError(_("The record does not exist or has been deleted."))
             # 4. Write gate: ACLs + record rules.
             record.check_access_rights("write")
             record.check_access_rule("write")
@@ -223,9 +221,7 @@ class ExcalidrawChatterController(http.Controller):
         except Exception:
             _logger.exception("excalidraw_for_odoo: unexpected error saving")
             result = {
-                "error": _(
-                    "Unexpected error saving the drawing. Please try again."
-                )
+                "error": _("Unexpected error saving the drawing. Please try again.")
             }
         return result
 
@@ -245,13 +241,9 @@ class ExcalidrawChatterController(http.Controller):
         try:
             self._check_group()
             attachment_id_int = self._to_int(attachment_id)
-            attachment = (
-                request.env["ir.attachment"].browse(attachment_id_int).exists()
-            )
+            attachment = request.env["ir.attachment"].browse(attachment_id_int).exists()
             if not attachment:
-                raise MissingError(
-                    _("The record does not exist or has been deleted.")
-                )
+                raise MissingError(_("The record does not exist or has been deleted."))
             # ORM read: ir.attachment access rules govern (no bypass).
             data = attachment.read(["name", "res_model", "datas"])[0]
             if not str(data["name"]).endswith(".excalidraw"):
@@ -277,8 +269,6 @@ class ExcalidrawChatterController(http.Controller):
         except Exception:
             _logger.exception("excalidraw_for_odoo: unexpected error fetching scene")
             result = {
-                "error": _(
-                    "Unexpected error fetching the drawing. Please try again."
-                )
+                "error": _("Unexpected error fetching the drawing. Please try again.")
             }
         return result

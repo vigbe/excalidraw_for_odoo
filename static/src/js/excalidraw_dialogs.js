@@ -168,7 +168,10 @@ export class ExcalidrawPickerDialog extends Component {
             );
         } catch (error) {
             // ACL edge: treat as an empty list — the picker stays functional.
-            console.error("excalidraw_for_odoo: could not list drawings", error);
+            console.error(
+                "excalidraw_for_odoo: could not list drawings",
+                error,
+            );
             this.state.attachments = [];
         } finally {
             this.state.loading = false;
@@ -591,7 +594,8 @@ export class ExcalidrawEditorDialog extends Component {
                 "Delete",
                 "Backspace",
             ].includes(k) ||
-            ((ev.ctrlKey || ev.metaKey) && ["z", "Z", "y", "Y", "k", "K"].includes(k));
+            ((ev.ctrlKey || ev.metaKey) &&
+                ["z", "Z", "y", "Y", "k", "K"].includes(k));
         if (contained) {
             ev.stopPropagation();
         }
