@@ -1,4 +1,6 @@
-import{a as e}from"./chunk-YUSHYV7C.js";var l=e(()=>`
+import { a as e } from "./chunk-YUSHYV7C.js";
+var l = e(
+  () => `
   /* Font Awesome icon styling - consolidated */
   .label-icon {
     display: inline-block;
@@ -12,4 +14,7 @@ import{a as e}from"./chunk-YUSHYV7C.js";var l=e(()=>`
     stroke: revert;
     stroke-width: revert;
   }
-`,"getIconStyles");export{l as a};
+`,
+  "getIconStyles",
+);
+export { l as a };
