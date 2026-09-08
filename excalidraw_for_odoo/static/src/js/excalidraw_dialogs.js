@@ -105,6 +105,9 @@ export class ExcalidrawPickerDialog extends Component {
     static components = { Dialog };
     static template = "excalidraw_for_odoo.PickerDialog";
     static props = {
+            // Injected by the dialog service on every dialog.add() call —
+            // must be declared or Owl 2 strict validation rejects it.
+            close: { type: Function, optional: true },
         resModel: String,
         resId: { type: [Number, String] },
         onSaved: { type: Function, optional: true },
@@ -246,6 +249,9 @@ export class ExcalidrawEditorDialog extends Component {
     static components = { Dialog };
     static template = "excalidraw_for_odoo.EditorDialog";
     static props = {
+            // Injected by the dialog service on every dialog.add() call —
+            // must be declared or Owl 2 strict validation rejects it.
+            close: { type: Function, optional: true },
         resModel: String,
         resId: { type: [Number, String] },
         name: String,

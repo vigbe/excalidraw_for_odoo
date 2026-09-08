@@ -4,7 +4,7 @@
 # pyright: reportUnusedExpression=false
 {  # noqa: B018
     "name": "Excalidraw for Odoo",
-    "version": "19.0.2.0.0",
+    "version": "19.0.2.0.1",
     "category": "Productivity",
     "summary": "Excalidraw drawing tool in the record chatter",
     "description": """
