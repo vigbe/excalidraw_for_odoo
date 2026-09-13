@@ -40,7 +40,9 @@ _GROUP_USER = "excalidraw_for_odoo.group_excalidraw_user"
 # Internal marker of the scene half of the pair (DR-ATT-1 as amended by
 # CR-1/S12): chatter attachment domains exclude res_field != False, so the
 # machine artifact stays hidden; the PNG half stays res_field=False.
-SCENE_RES_FIELD = "excalidraw_scene"
+SCENE_RES_FIELD = "name"  # 17/18: a real field on every model — markers
+# pointing at nonexistent fields crash ir_attachment._search
+# (core _fields[res_field] KeyError) for non-system users.
 
 
 class ExcalidrawChatterController(http.Controller):
@@ -178,7 +180,7 @@ class ExcalidrawChatterController(http.Controller):
         "/excalidraw/chatter/save",
         auth="user",
         methods=["POST"],
-        type="jsonrpc",
+        type="json",
     )
     def excalidraw_chatter_save(
         self, res_model=None, res_id=None, name="", scene=None, png=None
@@ -260,7 +262,7 @@ class ExcalidrawChatterController(http.Controller):
         "/excalidraw/chatter/scene",
         auth="user",
         methods=["POST"],
-        type="jsonrpc",
+        type="json",
     )
     def excalidraw_chatter_scene(self, attachment_id=None):
         """Return the stored scene text for a ``.excalidraw`` attachment."""
@@ -318,7 +320,7 @@ class ExcalidrawChatterController(http.Controller):
         "/excalidraw/chatter/list",
         auth="user",
         methods=["POST"],
-        type="jsonrpc",
+        type="json",
     )
     def excalidraw_chatter_list(self, res_model=None, res_id=None):
         """List the record's scene rows (id/name/write_date, newest first)."""
