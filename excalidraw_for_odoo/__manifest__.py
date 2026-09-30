@@ -4,7 +4,7 @@
 # pyright: reportUnusedExpression=false
 {  # noqa: B018
     "name": "Excalidraw for Odoo",
-    "version": "19.0.2.0.2",
+    "version": "20.0.2.0.0",
     "category": "Productivity",
     "summary": "Excalidraw drawing tool in the record chatter",
     "description": """
@@ -27,13 +27,20 @@ Features
 * Vendored library: @excalidraw/excalidraw 0.18.1 (MIT) bundled with esbuild,
   fonts served locally via window.EXCALIDRAW_ASSET_PATH.
 
-Breaking change (19.0.2.0.0)
+Breaking change (v2 chatter tool)
 ---------------------------
 The standalone "Excalidraw" application and its drawing model were removed.
 Updating permanently destroys previously stored standalone drawings (they
 are not migrated). Security groups are kept (they gate the new chatter
 tool). Note: Odoo keeps the old table on update — see the README deploy
 runbook to drop it explicitly and reclaim the space.
+
+Odoo 20 port (20.0.2.0.0)
+------------------------
+OWL 3 migration: props via useProps/t-schemas, signal-based reactivity and
+refs, t-out templates, Material Symbols (oi) icons. The chatter refresh now
+uses the MAIL:RELOAD-THREAD event, and access checks use has_access()
+(check_access_rights/check_access_rule were removed in Odoo 20).
         """,
     "author": "Victor Bastías Escobar",
     "website": "https://vicbas.com",

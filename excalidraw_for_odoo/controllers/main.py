@@ -13,8 +13,8 @@ internal ``excalidraw_scene`` marker (hidden from chatter); the PNG keeps
 Security model (FR-ACCESS-1): the controller is the source of truth and checks
 group membership → generic chatter-capability of the model → record existence
 → write access, all before any validation side effect or attachment write.
-Odoo 19 hard-denies non-system ORM access to ``res_field``-marker rows and
-record rules cannot lift it (probe 2026-09-04, CR-1 Option A), so scene-row
+Odoo (17+, same code path in 20) hard-denies non-system ORM access to
+``res_field``-marker rows and record rules cannot lift it, so scene-row
 attachment operations run via ``sudo()`` strictly AFTER those real-user
 gates — the gates, not attachment record rules, are the security boundary
 for scene rows (DR-ATT-1 as amended).
@@ -197,8 +197,12 @@ class ExcalidrawChatterController(http.Controller):
             if not record:
                 raise MissingError(_("The record does not exist or has been deleted."))
             # 4. Write gate: ACLs + record rules.
-            record.check_access_rights("write")
-            record.check_access_rule("write")
+            # Odoo 20: check_access_rights/check_access_rule are gone;
+            # has_access combines both and returns a bool.
+            if not record.has_access("write"):
+                raise AccessError(
+                    _("You are not allowed to modify this record.")
+                )
             # 5. Scene validation — nothing is written before this point.
             scene_text = self._parse_scene(scene)
             # 6. PNG validation (decodability only; frontend-only producer).
@@ -287,8 +291,13 @@ class ExcalidrawChatterController(http.Controller):
             record = model.browse(data["res_id"]).exists()
             if not record:
                 raise MissingError(_("The record does not exist or has been deleted."))
-            record.check_access_rights("read")
-            record.check_access_rule("read")
+            # Read gate on the host record, as the requesting user
+            # (Odoo 20: has_access replaces check_access_rights +
+            # check_access_rule).
+            if not record.has_access("read"):
+                raise AccessError(
+                    _("You are not allowed to read this record.")
+                )
             result = {
                 "scene": base64.b64decode(data["datas"]).decode(
                     "utf-8", errors="replace"
@@ -330,9 +339,13 @@ class ExcalidrawChatterController(http.Controller):
             record = model.browse(res_id_int).exists()
             if not record:
                 raise MissingError(_("The record does not exist or has been deleted."))
-            # Read gate on the host record, as the requesting user.
-            record.check_access_rights("read")
-            record.check_access_rule("read")
+            # Read gate on the host record, as the requesting user
+            # (Odoo 20: has_access replaces check_access_rights +
+            # check_access_rule).
+            if not record.has_access("read"):
+                raise AccessError(
+                    _("You are not allowed to read this record.")
+                )
             # sudo search (marker rows are invisible to plain users);
             # "=ilike %.excalidraw" never matches the PNG twins, so the
             # listing is scene-only (half-pair tolerance by construction).

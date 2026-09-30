@@ -1,11 +1,20 @@
 # excalidraw_for_odoo
 
 Excalidraw whiteboard embedded as a **chatter tool for every record** in
-Odoo 19 Community — a pencil button next to the paperclip, a drawing picker,
+Odoo Community — a pencil button next to the paperclip, a drawing picker,
 and a fullscreen editor. The vendored library (`@excalidraw/excalidraw`
 0.18.1, MIT) plus its fonts are bundled inside the module with esbuild, so
 the editor works fully offline and behind proxies — no external CDN is
 contacted.
+
+## Compatibility
+
+| Branch | Odoo | Notes |
+| --- | --- | --- |
+| `20.0` | 20 | OWL 3 port: `useProps`/t-schemas, signals, `t-out`, Material Symbols icons, `has_access` gates, `MAIL:RELOAD-THREAD` refresh. |
+| `19.0` | 19 | Original v2 chatter tool. |
+| `18.0` | 18 | v2 structure merged; not runtime-tested on 18 — the chatter patch targets the 19/20 component layout. |
+| `17.0` | 17 | Same caveat as 18.0. |
 
 ## Usage
 
@@ -64,8 +73,8 @@ There is no locking or merge (by design, BR-CONC-1).
 - *Excalidraw / Manager* — implies User; reserved for future manager-only
   capabilities (e.g. deleting drawings from the picker).
 
-Groups use the Odoo 19 `res.groups.privilege` pattern and survived the
-19.0.2.0.0 update unchanged.
+Groups use the Odoo 19+ `res.groups.privilege` pattern (unchanged in 20)
+and survived the 19.0.2.0.0 update unchanged.
 
 ## Breaking change — 19.0.2.0.0 (WIPE)
 

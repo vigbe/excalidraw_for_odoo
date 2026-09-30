@@ -1,11 +1,17 @@
 /** @odoo-module **/
 
+// OWL 3 / Odoo 20: static props + useRef/useState/useEffect([]) are gone.
+// Props are declared with useProps + t-schemas (only declared keys are
+// readable on this.props), state objects are proxy(), refs are signal.ref()
+// (read with a call), and the mount-once effect is a plain onMounted.
 import {
     Component,
+    onMounted,
     onWillUnmount,
-    useEffect,
-    useRef,
-    useState,
+    proxy,
+    signal,
+    t,
+    useProps,
 } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
@@ -101,17 +107,20 @@ export function generateDrawingName(existingNames) {
 //  Picker dialog — lists the record's .excalidraw attachments and
 //  opens the editor on an existing scene or on a fresh one.
 // ─────────────────────────────────────────────────────────────────
+
+export const pickerDialogProps = {
+    // Injected by the dialog service on every dialog.add() call (20: the
+    // DialogPlugin merges `close` into the sub-component props).
+    close: t.function(),
+    resModel: t.string(),
+    resId: t.or([t.number(), t.string()]),
+    onSaved: t.function().optional(),
+};
+
 export class ExcalidrawPickerDialog extends Component {
     static components = { Dialog };
     static template = "excalidraw_for_odoo.PickerDialog";
-    static props = {
-            // Injected by the dialog service on every dialog.add() call —
-            // must be declared or Owl 2 strict validation rejects it.
-            close: { type: Function, optional: true },
-        resModel: String,
-        resId: { type: [Number, String] },
-        onSaved: { type: Function, optional: true },
-    };
+    props = useProps(pickerDialogProps);
 
     setup() {
         this.data = this.env.dialogData;
@@ -127,7 +136,7 @@ export class ExcalidrawPickerDialog extends Component {
             close: _t("Close"),
         };
 
-        this.state = useState({
+        this.state = proxy({
             loading: true,
             attachments: [], // [{ id, name, write_date }]
             openingId: null, // attachment id whose row shows a spinner
@@ -193,10 +202,10 @@ export class ExcalidrawPickerDialog extends Component {
             resId: this.props.resId,
             name: generateDrawingName(this.existingNames),
             // `initialScene` deliberately omitted (= absent prop), NOT
-            // `null`: OWL's validator rejects an explicit null for a
-            // `type: [String, Boolean]` union (verified against this
-            // build's owl.js). An absent prop yields a fresh scene via
-            // buildInitialData(undefined) — same BR-SCENE-2 semantics.
+            // `null`: an explicit null is not a valid string/boolean for
+            // the t-schema union (Owl 2 behaved the same). An absent prop
+            // yields a fresh scene via buildInitialData(undefined) — same
+            // BR-SCENE-2 semantics.
             onSaved: this.props.onSaved,
         });
     }
@@ -245,26 +254,29 @@ export class ExcalidrawPickerDialog extends Component {
 //  Excalidraw bundle (React lifecycle ported verbatim from the legacy
 //  standalone field widget — design §3.2.2 / D10).
 // ─────────────────────────────────────────────────────────────────
+export const editorDialogProps = {
+    close: t.function(),
+    resModel: t.string(),
+    resId: t.or([t.number(), t.string()]),
+    name: t.string(),
+    // Deliberately a boolean-or-string union with no default: an absent
+    // prop yields a fresh scene via buildInitialData(undefined) — same
+    // BR-SCENE-2 semantics as before.
+    initialScene: t.or([t.string(), t.boolean()]).optional(),
+    onSaved: t.function().optional(),
+};
+
 export class ExcalidrawEditorDialog extends Component {
     static components = { Dialog };
     static template = "excalidraw_for_odoo.EditorDialog";
-    static props = {
-            // Injected by the dialog service on every dialog.add() call —
-            // must be declared or Owl 2 strict validation rejects it.
-            close: { type: Function, optional: true },
-        resModel: String,
-        resId: { type: [Number, String] },
-        name: String,
-        initialScene: { type: [String, Boolean], optional: true },
-        onSaved: { type: Function, optional: true },
-    };
+    props = useProps(editorDialogProps);
 
     setup() {
         this.data = this.env.dialogData;
         this.notification = useService("notification");
-        this.containerRef = useRef("excalidraw_container");
+        this.containerRef = signal.ref();
 
-        this.state = useState({ loading: false, error: "" });
+        this.state = proxy({ loading: false, error: "" });
         this.lib = null;
         this.reactRoot = null;
         this.excalidrawAPI = null;
@@ -287,19 +299,17 @@ export class ExcalidrawEditorDialog extends Component {
         this._saving = false;
         this._saveQueued = false;
 
-        // Mount the React editor once ([] deps). OWL re-renders never touch
-        // the React root: the t-ref div is a stable node in an otherwise
-        // static subtree (R2). Cleanup unmounts on dialog destruction.
-        useEffect(
-            () => {
-                const el = this.containerRef.el;
-                if (el) {
-                    this.mountEditor(el);
-                }
-                return () => this.destroyEditor();
-            },
-            () => [],
-        );
+        // Mount the React editor once. OWL 3 dropped the deps-array
+        // useEffect; onMounted replaces it ([] deps in Owl 2 = run once
+        // after mount). OWL re-renders never touch the React root: the
+        // t-ref div is a stable node in an otherwise static subtree (R2).
+        // Unmount (and the close-flush) happens in onWillUnmount below.
+        onMounted(() => {
+            const el = this.containerRef();
+            if (el) {
+                this.mountEditor(el);
+            }
+        });
 
         // Close-flush (FR-SAVE-1): every close path (ESC, back-arrow, dialog
         // service) unmounts the component; saveNow() is fire-and-forget —
@@ -374,7 +384,7 @@ export class ExcalidrawEditorDialog extends Component {
         this.state.error = "";
         try {
             const lib = await loadExcalidraw();
-            if (token !== this.mountToken || !this.containerRef.el) {
+            if (token !== this.mountToken || !this.containerRef()) {
                 return; // stale mount
             }
             this.lib = lib;

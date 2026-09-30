@@ -4,40 +4,42 @@
     <!-- ============================================================
          Picker dialog: list the record's .excalidraw attachments and
          open the editor on an existing scene or on a fresh one.
+         OWL 3: every component variable is this.-prefixed and t-esc is
+         replaced by t-out.
          ============================================================ -->
     <t t-name="excalidraw_for_odoo.PickerDialog" owl="1">
         <div>
-            <Dialog title="dialogTitle" contentClass="'o-excalidraw-picker-dialog'">
-                <div t-if="state.loading" class="d-flex align-items-center justify-content-center p-4">
+            <Dialog title="this.dialogTitle" contentClass="'o-excalidraw-picker-dialog'">
+                <div t-if="this.state.loading" class="d-flex align-items-center justify-content-center p-4">
                     <span class="spinner-border me-2" role="status"/>
-                    <span t-esc="labels.loading"/>
+                    <span t-out="this.labels.loading"/>
                 </div>
                 <t t-else="">
-                    <t t-if="state.attachments.length === 0">
+                    <t t-if="this.state.attachments.length === 0">
                         <div class="o-excalidraw-picker-empty text-center text-muted p-4">
-                            <i class="fa fa-pencil fa-2x mb-2 d-block" aria-hidden="true"/>
-                            <t t-esc="labels.empty"/>
+                            <i class="oi oi-fw mb-2 d-block" style="font-size: 2em;" data-icon="edit" aria-hidden="true"/>
+                            <t t-out="this.labels.empty"/>
                         </div>
                     </t>
                     <t t-else="">
                         <div class="o-excalidraw-picker-list list-group">
-                            <t t-foreach="state.attachments" t-as="att" t-key="att.id">
+                            <t t-foreach="this.state.attachments" t-as="att" t-key="att.id">
                                 <button
                                     type="button"
                                     class="o-excalidraw-picker-row list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                                    t-att-title="labels.open"
-                                    t-att-aria-label="labels.open"
-                                    t-att-disabled="state.openingId !== null"
+                                    t-att-title="this.labels.open"
+                                    t-att-aria-label="this.labels.open"
+                                    t-att-disabled="this.state.openingId !== null"
                                     t-on-click="() => this.onOpenExisting(att)"
                                 >
-                                    <span class="o-excalidraw-picker-name text-truncate" t-esc="att.name"/>
+                                    <span class="o-excalidraw-picker-name text-truncate" t-out="att.name"/>
                                     <span class="d-flex align-items-center gap-2">
                                         <span
-                                            t-if="state.openingId === att.id"
+                                            t-if="this.state.openingId === att.id"
                                             class="spinner-border spinner-border-sm"
                                             role="status"
                                         />
-                                        <small class="text-muted text-nowrap" t-esc="formatStamp(att)"/>
+                                        <small class="text-muted text-nowrap" t-out="this.formatStamp(att)"/>
                                     </span>
                                 </button>
                             </t>
@@ -45,12 +47,12 @@
                     </t>
                 </t>
                 <t t-set-slot="footer">
-                    <button type="button" class="btn btn-primary" t-on-click="onNew">
-                        <i class="fa fa-plus me-1" aria-hidden="true"/>
-                        <t t-esc="labels.new"/>
+                    <button type="button" class="btn btn-primary" t-on-click="this.onNew">
+                        <i class="oi oi-fw me-1" data-icon="add" aria-hidden="true"/>
+                        <t t-out="this.labels.new"/>
                     </button>
                     <button type="button" class="btn btn-secondary" t-on-click="() => this.data.close()">
-                        <t t-esc="labels.close"/>
+                        <t t-out="this.labels.close"/>
                     </button>
                 </t>
             </Dialog>
@@ -65,24 +67,24 @@
     <t t-name="excalidraw_for_odoo.EditorDialog" owl="1">
         <div>
             <Dialog
-                title="dialogTitle"
+                title="this.dialogTitle"
                 fullscreen="true"
                 size="fullscreen"
                 contentClass="'o-excalidraw-editor-dialog-content'"
                 withBodyPadding="false"
                 footer="false"
             >
-                <div class="o_excalidraw_editor_wrap" t-on-keydown="containKeydown">
-                    <div t-if="state.error" class="alert alert-danger mb-2" role="alert" t-esc="state.error"/>
+                <div class="o_excalidraw_editor_wrap" t-on-keydown="this.containKeydown">
+                    <div t-if="this.state.error" class="alert alert-danger mb-2" role="alert" t-out="this.state.error"/>
                     <div class="o_excalidraw_toolbar d-flex justify-content-end mb-1">
                         <button
                             type="button"
                             class="o_excalidraw_theme_toggle btn btn-sm"
-                            t-on-click="toggleTheme"
-                            t-att-title="themeTooltip"
-                            t-att-aria-label="themeTooltip"
+                            t-on-click="this.toggleTheme"
+                            t-att-title="this.themeTooltip"
+                            t-att-aria-label="this.themeTooltip"
                         >
-                            <svg t-if="effectiveTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg t-if="this.effectiveTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="5"/>
                                 <line x1="12" y1="1" x2="12" y2="3"/>
                                 <line x1="12" y1="21" x2="12" y2="23"/>
@@ -99,13 +101,13 @@
                         </button>
                     </div>
                     <div class="o_excalidraw_canvas_wrap position-relative">
-                        <div class="o_excalidraw_canvas" t-ref="excalidraw_container"/>
+                        <div class="o_excalidraw_canvas" t-ref="this.containerRef"/>
                         <div
-                            t-if="state.loading"
+                            t-if="this.state.loading"
                             class="o_excalidraw_spinner position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
                         >
                             <span class="spinner-border me-2" role="status"/>
-                            <span t-esc="loadingLabel"/>
+                            <span t-out="this.loadingLabel"/>
                         </div>
                     </div>
                 </div>
@@ -119,11 +121,16 @@
          sub-template (its whole surface is that one button; the two t-call
          sites are mutually exclusive branches, so the button renders exactly
          once per chatter, next to the paperclip in both states).
+         Odoo 20: the sub-template, its button class and both t-call sites
+         (FileUploader toggler slot + else branch) are unchanged, so the
+         inheritance anchor survives the OWL 3 migration.
          V-3 (apply check): in the zero-attachment branch this sub-template is
          rendered inside web.FileUploader's toggler slot, whose span carries
          t-on-click.prevent="onSelectFileButtonClick" (opens the OS file
          dialog). Our own click must stop propagation or it would ALSO open
          the file picker — hence t-on-click.stop here.
+         OWL 3: threadId is a propComputed (called, not read) and the 19-era
+         compactHeight prop is gone — the cosmetic my-2 margin with it.
          ============================================================ -->
     <t t-name="excalidraw_for_odoo.ChatterAttachFilesExtension"
        t-inherit="mail.Chatter.attachFiles"
@@ -131,14 +138,13 @@
         <xpath expr="//button[hasclass('o-mail-Chatter-attachFiles')]" position="after">
             <button
                 type="button"
-                class="btn btn-link o-mail-Chatter-excalidraw text-nowrap"
-                t-if="props.threadId and excalidraw.visible"
-                t-att-class="{ 'my-2': !props.compactHeight }"
-                t-att-title="excalidrawButtonTitle"
-                t-att-aria-label="excalidrawButtonTitle"
-                t-on-click.stop="openExcalidraw"
+                class="btn btn-link o-mail-Chatter-excalidraw text-nowrap px-1 d-flex align-items-center"
+                t-if="this.threadId() and this.excalidrawVisible()"
+                t-att-title="this.excalidrawButtonTitle"
+                t-att-aria-label="this.excalidrawButtonTitle"
+                t-on-click.stop="this.openExcalidraw"
             >
-                <i class="fa fa-pencil" aria-hidden="true"/>
+                <i class="oi oi-fw" data-icon="edit" aria-hidden="true"/>
             </button>
         </xpath>
     </t>
