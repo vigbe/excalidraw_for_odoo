@@ -5,7 +5,9 @@ import { useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
 import { user } from "@web/core/user";
 import { _t } from "@web/core/l10n/translation";
-import { Chatter } from "@mail/chatter/web_portal/chatter";
+// Odoo 17: the Chatter component lives in @mail/core/web/chatter
+// (the @mail/chatter/web_portal/chatter path only exists from 18 on).
+import { Chatter } from "@mail/core/web/chatter";
 import { onWillUpdateProps, useState } from "@odoo/owl";
 
 import { ExcalidrawPickerDialog } from "./excalidraw_dialogs";
